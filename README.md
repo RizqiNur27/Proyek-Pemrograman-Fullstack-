@@ -1,2 +1,2 @@
 # Proyek-Pemrograman-Fullstack-
-Pemrograman Fullstack | Kelompok Deadline Enjoyer
+Pemrograman Fullstack | Kelompok Deadline Enjoyer.
