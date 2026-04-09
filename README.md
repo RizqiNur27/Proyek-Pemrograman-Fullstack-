@@ -14,9 +14,9 @@
 <!-- untuk project manager -->
   <tr>
     <td colspan="2" align="center">
-      <img src="./img/syaril.jpg" alt="pm" width="50%">
+      <img src="./img/syaril.jpg" alt="pm" width="70%">
       <br>
-      <strong>nama</strong>
+      <strong>Syahril Arif Adriansyah</strong>
       <br>
       <em>Full Stack Developer</em>
     </td>
@@ -26,14 +26,14 @@
     <td align="center">
       <img src="./img/omat.jpg" alt="Teks Alt Orang 1" width="100%">
       <br>
-      <strong>nama</strong>
+      <strong>Muhammad Rizqi Nurrohmat</strong>
       <br>
       <em>Full Stack Developer</em>
     </td>
     <td align="center">
-      <img src="./img/hanif.jpeg" alt="Teks Alt Orang 2" width="85%">
+      <img src="./img/hanif.jpeg" alt="Teks Alt Orang 2" width="100%">
       <br>
-      <strong>nama</strong>
+      <strong>Muhammad Shidqi Hanif Firdaus</strong>
       <br>
       <em>Full Stack Developer</em>
     </td>
@@ -44,14 +44,14 @@
     <td align="center">
       <img src="./img/harun.jpeg" alt="Teks Alt Orang 1" width="100%">
       <br>
-      <strong>nama</strong>
+      <strong>Harun Yahya</strong>
       <br>
       <em>Full Stack Developer</em>
     </td>
     <td align="center">
-      <img src="./img/rehan.jpeg" alt="Teks Alt Orang 2" width="75%">
+      <img src="./img/rehan.jpeg" alt="Teks Alt Orang 2" width="100%">
       <br>
-      <strong>nama</strong>
+      <strong>Achmad Raihan</strong>
       <br>
       <em>Full Stack Developer</em>
     </td>
