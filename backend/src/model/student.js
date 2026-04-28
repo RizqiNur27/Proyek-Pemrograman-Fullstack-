@@ -1,4 +1,4 @@
-const db = require('../config/databas');
+const db = require('../config/db');
 
 class Student{
     //model menampilkan data

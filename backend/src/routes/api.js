@@ -1,7 +1,7 @@
 
 //biasanya routing api ini disebut dengan endpoint
-const AuthController = require("../controllers/AuthController");
-const StudentController = require("../controllers/StudentController");
+const AuthController = require("../controller/authcontroller");
+const StudentController = require("../controller/studentcontroller");
 const express = require("express");
 const router = express.Router();
 router.get("/", (req, res) =>{

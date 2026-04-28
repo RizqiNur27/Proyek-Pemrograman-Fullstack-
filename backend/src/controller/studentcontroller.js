@@ -1,4 +1,4 @@
-const Student = require("../models/Student");
+const Student = require("../model/student");
 const {validateStudent, validateId} = require("../utils/validator");
 const errorHandler = require("../utils/errorhandler");
 class StudentController{

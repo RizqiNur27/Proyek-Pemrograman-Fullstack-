@@ -1,21 +1,24 @@
-const { Pool } = require('pg');
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const db = require('../config/db'); // Sesuaikan path ke file db.js kamu
 
 class User {
-    static findByEmail(email, callback) {
-        const query = 'SELECT * FROM users WHERE email = $1';
-        pool.query(query, [email], (err, res) => {
-            if (err) return callback(err, null);
-            callback(null, res.rows);
-        });
+    static async findByEmail(email) {
+        try {
+            // MySQL menggunakan '?' bukan '$1'
+            const [rows] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
+            return rows;
+        } catch (err) {
+            throw err;
+        }
     }
 
-    static create(data, callback) {
-        const query = 'INSERT INTO users (email, password, role) VALUES ($1, $2, $3)';
-        pool.query(query, [data.email, data.password, data.role], (err, res) => {
-            if (err) return callback(err);
-            callback(null);
-        });
+    static async create(data) {
+        try {
+            const query = 'INSERT INTO users (nama, email, password, role) VALUES (?, ?, ?, ?)';
+            const [result] = await db.query(query, [data.nama || 'User', data.email, data.password, data.role || 'pelanggan']);
+            return result;
+        } catch (err) {
+            throw err;
+        }
     }
 }
 
