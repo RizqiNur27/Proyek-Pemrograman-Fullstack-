@@ -2,6 +2,8 @@
 const AuthController = require("../controller/authcontroller");
 const MenuController = require("../controller/menuController");
 const KategoriController = require("../controller/kategoriController");
+const OrderController = require("../controller/orderController");
+const TransaksiController = require("../controller/transaksiController");
 const express = require("express");
 const router = express.Router();
 
@@ -19,6 +21,9 @@ router.get("/", (req, res) =>{
 router.get("/menu", MenuController.index);
 router.get("/menu/:id", MenuController.show);
 router.get("/kategori", KategoriController.index);
+router.post("/orders", auth, OrderController.create);
+router.post("/transaksi", auth, TransaksiController.bayar);
+
 
 // ==========================================
 // RUTE PROTECTED (Wajib login & akses admin)

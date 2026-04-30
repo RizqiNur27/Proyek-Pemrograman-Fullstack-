@@ -1,0 +1,33 @@
+const Order = require("../model/order");
+const errorHandler = require("../utils/errorhandler");
+
+class OrderController {
+    async create(req, res) {
+        try {
+            const id_user = req.user.id; 
+            // Ambil tipe_layanan, catatan dihapus karena tidak ada di DB
+            const { tipe_layanan, items } = req.body;
+
+            if (!items || items.length === 0) {
+                return errorHandler(res, "Keranjang belanja kosong", 400, "Bad Request");
+            }
+
+            const result = await Order.createOrder(id_user, tipe_layanan, items);
+
+            res.status(201).json({
+                success: true,
+                message: "Pesanan berhasil dibuat, silakan menuju kasir",
+                data: {
+                    id_order: result.id_order,
+                    kode_order: result.kode_order,
+                    total_tagihan: result.total_harga
+                }
+            });
+
+        } catch (err) {
+            return errorHandler(res, err, 500, err.message || "Gagal membuat pesanan");
+        }
+    }
+}
+
+module.exports = new OrderController();
