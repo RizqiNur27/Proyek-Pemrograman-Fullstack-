@@ -76,6 +76,8 @@ CREATE TABLE transaksi (
   id_order INT(11) DEFAULT NULL,
   total_harga INT(11) NOT NULL,
   metode_pembayaran VARCHAR(20) DEFAULT NULL,
+  status_pembayaran ENUM('lunas','belum') DEFAULT 'belum',
+  bukti_transfer VARCHAR(255) DEFAULT NULL,
   waktu_bayar TIMESTAMP NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (id_transaksi),
   KEY id_order (id_order),

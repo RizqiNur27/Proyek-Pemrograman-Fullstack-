@@ -73,15 +73,53 @@ export const deleteMenu = (id) => request('DELETE', `/menu/${id}`, null, true);
 // returns: { success, data: { id_order, kode_order, total_tagihan } }
 export const createOrder = (body) => request('POST', '/orders', body);
 
+// GET /api/orders/:id/struk — public, PDF receipt for order (used by QRIS)
+export const getStrukUrl = (id) => `${BASE}/orders/${id}/struk`;
+
 // ── TRANSAKSI ────────────────────────────────────────────
 // POST /api/transaksi  — auth required
-// body: { id_order, metode_pembayaran: 'cash'|'transfer'|'qris' }
+// body: { id_order, metode_pembayaran: 'cash'|'qris' }
 // returns: { success, data: { id_transaksi, id_order, total_harga, metode_pembayaran } }
 export const bayar = (body) => request('POST', '/transaksi', body, true);
 
-// ── AMBIL DATA UNTUK DASHBOARD ADMIN (Tambahkan di api.js) ──
+// ── DASHBOARD ADMIN ────────────────────────────────────────
 // GET /api/orders — admin only, melihat semua pesanan masuk
 export const getOrders = () => request('GET', '/orders', null, true);
 
+// DELETE /api/orders/:id — admin only, hapus pesanan
+export const deleteOrder = (id) => request('DELETE', `/orders/${id}`, null, true);
+
 // GET /api/transaksi — admin only, melihat semua riwayat pembayaran
 export const getTransaksi = () => request('GET', '/transaksi', null, true);
+
+// PATCH /api/transaksi/:id/lunas — admin only, menandai lunas
+export const lunas = (id) => request('PATCH', `/transaksi/${id}/lunas`, null, true);
+
+// GET /api/dashboard/harian — admin only, penjualan per menu hari ini
+export const getHarian = () => request('GET', '/dashboard/harian', null, true);
+
+// GET /api/dashboard/pdf — admin only, download PDF laporan harian
+export async function downloadPdf() {
+  const token = localStorage.getItem('token');
+  const res = await fetch(`${BASE}/dashboard/pdf`, {
+    headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+  });
+  if (!res.ok) {
+    let msg = 'Gagal download PDF';
+    try {
+      const err = await res.json();
+      msg = err.message || msg;
+    } catch (_) {}
+    throw new Error(msg);
+  }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `laporan-harian-${new Date().toISOString().slice(0, 10)}.pdf`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  // Revoke setelah jeda cukup lama agar download sempat dimulai
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
+}

@@ -6,7 +6,11 @@ import {
   updateMenu,
   deleteMenu,
   getOrders,
+  deleteOrder,
   getTransaksi,
+  lunas,
+  getHarian,
+  downloadPdf,
   bayar,
   uploadImage,
   UPLOADS_URL
@@ -20,8 +24,10 @@ export default function AdminPage({ onNavigate }) {
   const [tab, setTab]             = useState('dashboard'); // 'dashboard' | 'orders' | 'transaksi' | 'menu' | 'kategori'
   const [menu, setMenu]           = useState([]);
   const [kategori, setKategori]   = useState([]);
-  const [orders, setOrders]       = useState([]);         // State Baru
-  const [transaksi, setTransaksi] = useState([]);         // State Baru
+  const [orders, setOrders]       = useState([]);
+  const [transaksi, setTransaksi] = useState([]);
+  const [harian, setHarian]       = useState([]);
+  const [harianRingkasan, setHarianRingkasan] = useState({ totalPendapatan: 0, totalPesanan: 0 });
   const [loading, setLoading]     = useState(true);
   const [err, setErr]             = useState('');
   const [toast, setToast]         = useState(null);
@@ -91,28 +97,89 @@ export default function AdminPage({ onNavigate }) {
     }) + ' WIB';
   };
 
-  // Load semua data dari database secara paralel
+  // Load semua data (dengan spinner — hanya untuk inisialisasi / manual refresh)
   async function loadData() {
     setLoading(true);
-    try {
-      const [m, k, o, t] = await Promise.all([
-        getMenu(),
-        getKategori(),
-        getOrders(),
-        getTransaksi()
-      ]);
-      
-        setMenu(Array.isArray(m) ? m : m.data || []);
-        setKategori(Array.isArray(k) ? k : k.data || []);
-        setOrders(Array.isArray(o) ? o : o.data || []);
-        setTransaksi(Array.isArray(t) ? t : t.data || []);
-    }
-      catch (e) {
-        setErr(e.message);
-      } finally {
-        setLoading(false);
+    const [m, k, o, t] = await Promise.all([
+      getMenu().catch(() => ({ data: [] })),
+      getKategori().catch(() => ({ data: [] })),
+      getOrders().catch(() => ({ data: [] })),
+      getTransaksi().catch(() => ({ data: [] })),
+    ]);
+    setMenu(Array.isArray(m) ? m : m.data || []);
+    setKategori(Array.isArray(k) ? k : k.data || []);
+    setOrders(Array.isArray(o) ? o : o.data || []);
+    setTransaksi(Array.isArray(t) ? t : t.data || []);
+    setLoading(false);
+    getHarian().then(h => {
+      if (h.status === 'success') {
+        setHarian(h.data.items || []);
+        setHarianRingkasan(h.data.ringkasan || { totalPendapatan: 0, totalPesanan: 0 });
       }
+    }).catch(() => {});
+  }
 
+  // Refresh data di background tanpa spinner (dipanggil polling tiap 5 detik)
+  let prevOrderLength = 0;
+  async function refreshData() {
+    try {
+      const [o, t] = await Promise.all([
+        getOrders(),
+        getTransaksi(),
+      ]);
+      const newOrders = o.data || [];
+      const newTransaksi = t.data || [];
+
+      // Deteksi pesanan baru untuk notifikasi
+      if (prevOrderLength > 0 && newOrders.length > prevOrderLength) {
+        const latestOrder = newOrders[newOrders.length - 1];
+        setToast({
+          kode: latestOrder.kode_order,
+          nama: latestOrder.nama_pemesan || latestOrder.nama_user || '',
+          total: latestOrder.total_tagihan,
+        });
+        playNotificationSound();
+        setTimeout(() => setToast(null), 4000);
+      }
+      prevOrderLength = newOrders.length;
+
+      setOrders(newOrders);
+      setTransaksi(newTransaksi);
+    } catch (e) {
+      console.error('Polling error:', e);
+    }
+  }
+
+  async function handleDownloadPdf() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setErr('Anda belum login! Silakan login sebagai admin terlebih dahulu.');
+      return;
+    }
+    try {
+      await downloadPdf();
+    } catch (e) {
+      setErr(e.message);
+    }
+  }
+
+  async function handleLunas(id) {
+    try {
+      await lunas(id);
+      loadData();
+    } catch (e) {
+      alert('Gagal update status: ' + e.message);
+    }
+  }
+
+  async function handleDeleteOrder(id, kode) {
+    if (!window.confirm(`Hapus pesanan ${kode}?\nData transaksi & detail pesanan juga akan dihapus.`)) return;
+    try {
+      await deleteOrder(id);
+      loadData();
+    } catch (e) {
+      setErr('Gagal hapus pesanan: ' + e.message);
+    }
   }
 
   async function submitBayar() {
@@ -159,14 +226,12 @@ export default function AdminPage({ onNavigate }) {
 
   // Jalankan polling saat halaman admin terbuka
   useEffect(() => {
-    loadData(); // Load pertama kali untuk semua data
+    loadData();
 
-    // Set interval biar aplikasi nge-cek ke backend tiap 5000ms (5 detik)
     const intervalId = setInterval(() => {
-      checkNewOrders();
+      refreshData();
     }, 5000);
 
-    // Bersihkan interval kalau admin pindah halaman biar gak memory leak
     return () => clearInterval(intervalId);
   }, []);
 
@@ -230,7 +295,7 @@ export default function AdminPage({ onNavigate }) {
 
   // ── KALKULASI METRIK PRO BISNIS WARKOP ──
   const totalMenu       = menu.length;
-  const totalOmset      = transaksi.reduce((sum, t) => sum + t.total_harga, 0);
+  const totalOmset      = transaksi.reduce((sum, t) => sum + Number(t.total_harga), 0);
   const jumlahPesanan   = orders.length;
   const transaksiSukses = transaksi.length;
   // Tambahan data leaderboard untuk demo kelompok bray
@@ -395,6 +460,48 @@ export default function AdminPage({ onNavigate }) {
                   </div>
 
                 </div>
+
+                {/* ── LAPORAN HARIAN ── */}
+                <div className="admin-section-title" style={{marginTop: '30px'}}>
+                  Laporan Penjualan Hari Ini
+                  <button onClick={handleDownloadPdf} style={{
+                    marginLeft: '12px', padding: '6px 14px', borderRadius: '6px', fontSize: '12px',
+                    background: '#FF9057', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold',
+                    verticalAlign: 'middle'
+                  }}>
+                    📄 Download PDF
+                  </button>
+                </div>
+                <div className="admin-table-wrap" style={{marginTop: '10px'}}>
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>Menu</th>
+                        <th>Terjual</th>
+                        <th>Pendapatan</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {harian.filter(i => i.total_terjual > 0).map((item, idx) => (
+                        <tr key={item.id_menu || idx}>
+                          <td><strong>{item.nama_menu}</strong></td>
+                          <td>{item.total_terjual} porsi</td>
+                          <td style={{color: '#2DD4A0', fontWeight: 'bold'}}>{formatRp(item.total_pendapatan)}</td>
+                        </tr>
+                      ))}
+                      {harian.filter(i => i.total_terjual > 0).length === 0 && (
+                        <tr><td colSpan="3" style={{textAlign:'center', color:'#666'}}>Belum ada penjualan hari ini.</td></tr>
+                      )}
+                    </tbody>
+                    <tfoot>
+                      <tr style={{background: '#1a1a1a'}}>
+                        <td><strong>Total</strong></td>
+                        <td><strong>{harianRingkasan.totalPesanan} pesanan</strong></td>
+                        <td style={{color: '#2DD4A0', fontWeight: 'bold'}}>{formatRp(harianRingkasan.totalPendapatan)}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
               </>
             )}
           </>
@@ -409,24 +516,31 @@ export default function AdminPage({ onNavigate }) {
             </div>
             {loading ? <Spinner /> : (
               <div className="admin-table-wrap">
-                  <table className="admin-table">
+                    <table className="admin-table">
                     <thead>
                       <tr>
                         <th>Kode Order</th>
                         <th>Pelanggan</th>
-                        <th>Tipe Layanan</th>
-                        <th>Total Tagihan</th>
+                        <th>Item</th>
+                        <th>Tipe</th>
+                        <th>Total</th>
                         <th>Status</th>
+                        <th>Aksi</th>
                       </tr>
                     </thead>
                     <tbody>
                       {orders.map(o => {
-                        const isPaid = transaksi.some(t => t.id_order === o.id_order);
+                        const trx = transaksi.find(t => t.id_order === o.id_order);
                         const nama = o.nama_pemesan || o.nama_user || '(Tanpa Nama)';
                         return (
                           <tr key={o.id_order}>
                             <td><strong style={{color: '#FF9057'}}>{o.kode_order}</strong></td>
                             <td><span style={{fontWeight: 600}}>{nama}</span></td>
+                            <td style={{fontSize: '12px', color: '#aaa'}}>
+                              {o.items && o.items.length > 0
+                                ? o.items.map(i => `${i.nama_menu} x${i.jumlah}`).join(', ')
+                                : '-'}
+                            </td>
                             <td>
                               <span className={`badge ${o.tipe_layanan}`}>
                                 {o.tipe_layanan === 'dine_in' ? '🍽️ Dine In' : '📦 Take Away'}
@@ -454,11 +568,24 @@ export default function AdminPage({ onNavigate }) {
                                 </button>
                               )}
                             </td>
+                            <td>
+                              <button
+                                onClick={() => handleDeleteOrder(o.id_order, o.kode_order)}
+                                style={{
+                                  padding: '6px 12px', borderRadius: '6px', fontSize: '12px',
+                                  background: 'rgba(255, 77, 77, 0.15)', color: '#ff4d4d',
+                                  border: '1px solid #ff4d4d', cursor: 'pointer', fontWeight: 'bold',
+                                  whiteSpace: 'nowrap'
+                                }}
+                              >
+                                🗑 Hapus
+                              </button>
+                            </td>
                           </tr>
                         );
                       })}
                       {orders.length === 0 && (
-                        <tr><td colSpan="5" style={{textAlign:'center', color:'#666'}}>Belum ada pesanan masuk.</td></tr>
+                        <tr><td colSpan="7" style={{textAlign:'center', color:'#666'}}>Belum ada pesanan masuk.</td></tr>
                       )}
                     </tbody>
                   </table>
@@ -480,26 +607,65 @@ export default function AdminPage({ onNavigate }) {
                   <thead>
                     <tr>
                       <th>ID Transaksi</th>
-                      <th>ID Order</th>
-                      <th>Metode Pembayaran</th>
-                      <th>Nominal Diterima</th>
+                      <th>Kode Order</th>
+                      <th>Item</th>
+                      <th>Metode</th>
+                      <th>Status</th>
+                      <th>Nominal</th>
+                      <th>Aksi</th>
                     </tr>
                   </thead>
                   <tbody>
                     {transaksi.map(t => (
                       <tr key={t.id_transaksi}>
                         <td><span className="tbl-id">#{t.id_transaksi}</span></td>
-                        <td><strong>Order ID {t.id_order}</strong></td>
+                        <td><strong style={{color: '#FF9057'}}>{t.kode_order || `#${t.id_order}`}</strong></td>
+                        <td style={{fontSize: '12px', color: '#aaa'}}>
+                          {t.items && t.items.length > 0
+                            ? t.items.map(i => `${i.nama_menu} x${i.jumlah}`).join(', ')
+                            : '-'}
+                        </td>
                         <td>
                           <span style={{textTransform:'uppercase', fontWeight:'bold', fontSize:'13px'}}>
-                            {t.metode_pembayaran === 'cash' ? '💵 Cash' : t.metode_pembayaran === 'qris' ? '📱 QRIS' : '🏦 Bank Transfer'}
+                            {t.metode_pembayaran === 'cash' ? '💵 Cash' : t.metode_pembayaran === 'qris' ? '📱 QRIS' : '🏦 Transfer'}
                           </span>
                         </td>
+                        <td>
+                          {t.status_pembayaran === 'lunas' ? (
+                            <span style={{
+                              padding: '4px 10px', borderRadius: '20px', fontSize: '12px',
+                              background: 'rgba(45, 212, 160, 0.2)', color: '#2DD4A0', border: '1px solid #2DD4A0'
+                            }}>
+                              ✓ Lunas
+                            </span>
+                          ) : (
+                            <span style={{
+                              padding: '4px 10px', borderRadius: '20px', fontSize: '12px',
+                              background: 'rgba(255, 179, 71, 0.2)', color: '#ffb347', border: '1px solid #ffb347'
+                            }}>
+                              ⏳ Belum
+                            </span>
+                          )}
+                        </td>
                         <td><span style={{color: '#2DD4A0', fontWeight: 'bold'}}>{formatRp(t.total_harga)}</span></td>
+                        <td>
+                          {t.status_pembayaran !== 'lunas' && (
+                            <button
+                              onClick={() => handleLunas(t.id_transaksi)}
+                              style={{
+                                padding: '6px 12px', borderRadius: '6px', fontSize: '12px',
+                                background: '#2DD4A0', color: '#fff', border: 'none',
+                                cursor: 'pointer', fontWeight: 'bold'
+                              }}
+                            >
+                              ✓ Lunas
+                            </button>
+                          )}
+                        </td>
                       </tr>
                     ))}
                     {transaksi.length === 0 && (
-                      <tr><td colSpan="4" style={{textAlign:'center', color:'#666'}}>Belum ada record transaksi keuangan.</td></tr>
+                      <tr><td colSpan="7" style={{textAlign:'center', color:'#666'}}>Belum ada record transaksi keuangan.</td></tr>
                     )}
                   </tbody>
                 </table>

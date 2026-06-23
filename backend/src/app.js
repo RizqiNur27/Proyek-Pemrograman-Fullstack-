@@ -6,7 +6,7 @@ require('dotenv').config();
 // Import Routes
 const authRoutes = require('./routes/authRoutes'); // Route untuk login/register
 const apiRoutes = require('./routes/api');         // Route untuk students dan umum
-const uploadRoutes = require('./routes/upload');   // Route untuk upload gambar
+const { router: uploadRoutes, upload } = require('./routes/upload');   // Route untuk upload gambar
 
 const app = express();
 const PORT = process.env.PORT || 5000; // Menggunakan port 5000 sesuai log terminal Anda

@@ -12,8 +12,25 @@ class Order {
             ORDER BY o.tanggal DESC
         `;
         const [rows] = await db.query(query);
+
+        for (const row of rows) {
+            const [details] = await db.query(`
+                SELECT od.*, m.nama_menu
+                FROM order_detail od
+                JOIN menu m ON od.id_menu = m.id_menu
+                WHERE od.id_order = ?
+            `, [row.id_order]);
+            row.items = details;
+        }
         return rows;
     }
+    static async destroy(id) {
+        const [rows] = await db.query('SELECT id_order FROM orders WHERE id_order = ?', [id]);
+        if (rows.length === 0) throw new Error('Pesanan tidak ditemukan');
+        await db.query('DELETE FROM orders WHERE id_order = ?', [id]);
+        return { id_order: id };
+    }
+
     static async createOrder(id_user, tipe_layanan, items, nama_pemesan = null) {
         const connection = await db.getConnection(); 
         

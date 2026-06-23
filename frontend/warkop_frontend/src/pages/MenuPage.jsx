@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
-import { getMenu, getKategori, createOrder, bayar, UPLOADS_URL } from '../api';
+import { useState, useEffect, useRef } from 'react';
+import { getMenu, getKategori, createOrder, bayar, getStrukUrl, UPLOADS_URL } from '../api';
+import QRCode from 'qrcode';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 
@@ -24,9 +25,18 @@ export default function MenuPage({ onShowAuth, onNavigate }) {
   const [transaksiResult, setTransaksiResult] = useState(null);
   const [processing, setProcessing] = useState(false);
   const [err, setErr]            = useState('');
+  const [qrisDataUrl, setQrisDataUrl] = useState(null);
+  const qrisCanvasRef = useRef(null);
 
   // ── FITUR BARU: State untuk pencarian menu ──
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Generate QR code when user selects QRIS (in the bayar step)
+  useEffect(() => {
+    if (metodeBayar === 'qris' && orderResult && !qrisDataUrl && items.length > 0) {
+      generateQrisReceipt();
+    }
+  }, [metodeBayar, orderResult]);
 
   useEffect(() => {
     Promise.all([getMenu(), getKategori()])
@@ -73,7 +83,11 @@ export default function MenuPage({ onShowAuth, onNavigate }) {
     setErr('');
     try {
       const res = await bayar({ id_order: orderResult.id_order, metode_pembayaran: metodeBayar });
-      setTransaksiResult(res.data);
+      const data = res.data;
+      setTransaksiResult(data);
+      if (metodeBayar === 'qris') {
+        await generateQrisReceipt();
+      }
       setStep('sukses');
       clearCart();
     } catch (e) {
@@ -81,6 +95,34 @@ export default function MenuPage({ onShowAuth, onNavigate }) {
     } finally {
       setProcessing(false);
     }
+  }
+
+  const WA_NUMBER = '6285716836399';
+
+  function generateQrisReceipt() {
+    const line = '==============================';
+    let text = '*WARKOP SI BONTOT*\n';
+    text += 'Struk Pesanan\n';
+    text += line + '\n';
+    text += `Kode: ${orderResult.kode_order}\n`;
+    text += `Pelanggan: ${namaPemesan}\n`;
+    text += `Layanan: ${tipeLayanan === 'dine_in' ? 'Makan di Sini' : 'Bawa Pulang'}\n`;
+    text += line + '\n\n';
+    text += '*Menu:*\n';
+    items.forEach(i => {
+      const sub = i.harga * i.jumlah;
+      text += `- ${i.nama_menu} x${i.jumlah} = Rp ${Number(sub).toLocaleString('id-ID')}\n`;
+    });
+    text += '\n' + line + '\n';
+    text += `*TOTAL: Rp ${Number(total).toLocaleString('id-ID')}*\n`;
+    text += line + '\n\n';
+    text += 'Terima kasih ☕';
+
+    const waUrl = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(text)}`;
+
+    QRCode.toDataURL(waUrl, { width: 250, margin: 2 })
+      .then(url => setQrisDataUrl(url))
+      .catch(e => console.error('QR error:', e));
   }
 
   function resetCart() {
@@ -282,20 +324,40 @@ export default function MenuPage({ onShowAuth, onNavigate }) {
                 <div className="metode-list">
                   <p className="metode-label">Pilih Metode Pembayaran</p>
                   {[
-                    { val: 'cash',     icon: '💵', label: 'Tunai' },
-                    { val: 'transfer', icon: '🏦', label: 'Transfer Bank' },
-                    { val: 'qris',     icon: '📱', label: 'QRIS' },
+                    { val: 'cash', icon: '💵', label: 'Tunai' },
+                    { val: 'qris', icon: '📱', label: 'QRIS' },
                   ].map(m => (
                     <div
                       key={m.val}
                       className={`metode-card ${metodeBayar === m.val ? 'selected' : ''}`}
-                      onClick={() => setMetodeBayar(m.val)}
+                      onClick={() => { setMetodeBayar(m.val); if (m.val !== 'qris') setQrisDataUrl(null); }}
                     >
                       <span>{m.icon}</span><span>{m.label}</span>
                       {metodeBayar === m.val && <span className="check">✓</span>}
                     </div>
                   ))}
                 </div>
+
+                {metodeBayar === 'qris' && (
+                  <div style={{
+                    padding: '0 20px', marginBottom: '16px', textAlign: 'center'
+                  }}>
+                    <p style={{ color: '#aaa', fontSize: '13px', marginBottom: '12px' }}>
+                      Scan barcode untuk kirim struk pesanan ke WhatsApp kasir.
+                    </p>
+                    <div style={{
+                      background: '#fff', borderRadius: '12px', padding: '16px',
+                      display: 'inline-block'
+                    }}>
+                      <img
+                        src={qrisDataUrl}
+                        alt="QR"
+                        style={{ width: 200, height: 200 }}
+                      />
+                    </div>
+                  </div>
+                )}
+
                 {err && <div className="err-box">{err}</div>}
                 <div className="drawer-footer">
                   <button className="checkout-btn" onClick={handleBayar} disabled={processing}>
@@ -307,14 +369,51 @@ export default function MenuPage({ onShowAuth, onNavigate }) {
 
             {step === 'sukses' && transaksiResult && (
               <div className="sukses-view">
-                <div className="sukses-icon">✅</div>
-                <h2>Pembayaran Berhasil!</h2>
+                <div className="sukses-icon">{metodeBayar === 'cash' ? '✅' : '⏳'}</div>
+                <h2>{metodeBayar === 'cash' ? 'Pembayaran Berhasil!' : 'Pesanan Dibuat!'}</h2>
                 <div className="sukses-detail">
                   <div className="sd-row"><span>No. Transaksi</span>#<strong>{transaksiResult.id_transaksi}</strong></div>
                   <div className="sd-row"><span>Metode</span><strong style={{ textTransform:'capitalize' }}>{transaksiResult.metode_pembayaran}</strong></div>
                   <div className="sd-row"><span>Total</span><strong>{formatRp(transaksiResult.total_harga)}</strong></div>
                 </div>
-                <p className="sukses-msg">Terima kasih! Pesananmu sedang disiapkan ☕</p>
+
+                {metodeBayar === 'qris' && qrisDataUrl && (
+                  <div style={{ textAlign: 'center', margin: '16px 0' }}>
+                    <p style={{ color: '#aaa', fontSize: '12px', marginBottom: '10px' }}>
+                      Scan barcode untuk kirim pesanan ke WhatsApp kasir
+                    </p>
+                    <div style={{
+                      background: '#fff', borderRadius: '12px', padding: '12px',
+                      display: 'inline-block'
+                    }}>
+                      <img
+                        src={qrisDataUrl}
+                        alt="QR"
+                        style={{ width: 180, height: 180 }}
+                      />
+                    </div>
+                    <div style={{ marginTop: '10px' }}>
+                      <a
+                        href={orderResult ? getStrukUrl(orderResult.id_order) : '#'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          display: 'inline-flex', alignItems: 'center', gap: '6px',
+                          padding: '8px 16px', background: '#FF9057', color: '#fff',
+                          borderRadius: '8px', textDecoration: 'none', fontSize: '13px',
+                          fontWeight: 'bold'
+                        }}
+                      >
+                        📄 Download Struk PDF
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                <p className="sukses-msg">
+                  {metodeBayar === 'cash' ? 'Terima kasih! Pesananmu sedang disiapkan ☕' :
+                   'Scan QR di atas untuk kirim pesanan ke WhatsApp kasir.'}
+                </p>
                 <button className="checkout-btn" onClick={resetCart}>Pesan Lagi</button>
               </div>
             )}

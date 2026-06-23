@@ -23,6 +23,7 @@ router.get("/menu", MenuController.index);
 router.get("/menu/:id", MenuController.show);
 router.get("/kategori", KategoriController.index);
 router.post("/orders", OrderController.create);
+router.get("/orders/:id/struk", OrderController.struk);
 router.post("/transaksi", TransaksiController.bayar);
 
 
@@ -36,6 +37,10 @@ router.delete("/menu/:id", auth, authorize("admin"), MenuController.destroy);
 router.get('/dashboard/overview', dashboardController.getDashboardOverview);
 
 router.get("/orders", auth, authorize("admin"), OrderController.index);
+router.delete("/orders/:id", auth, authorize("admin"), OrderController.destroy);
 router.get("/transaksi", auth, authorize("admin"), TransaksiController.index);
+router.patch("/transaksi/:id/lunas", auth, authorize("admin"), TransaksiController.lunas);
+router.get('/dashboard/harian', auth, authorize("admin"), dashboardController.getHarian);
+router.get('/dashboard/pdf', auth, authorize("admin"), dashboardController.exportPdf);
 
 module.exports = router;
