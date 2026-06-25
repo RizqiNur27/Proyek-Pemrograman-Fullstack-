@@ -3,6 +3,7 @@ import { getMenu, getKategori, createOrder, bayar, getStrukUrl, UPLOADS_URL } fr
 import QRCode from 'qrcode';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import '../css/MenuPage.css'
 
 function formatRp(n) {
   return 'Rp ' + Number(n).toLocaleString('id-ID');
@@ -27,11 +28,11 @@ export default function MenuPage({ onShowAuth, onNavigate }) {
   const [err, setErr]            = useState('');
   const [qrisDataUrl, setQrisDataUrl] = useState(null);
   const qrisCanvasRef = useRef(null);
-
-  // ── FITUR BARU: State untuk pencarian menu ──
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Generate QR code when user selects QRIS (in the bayar step)
+  // URL Ikon Google Material 
+  const iconUrl = (name) => `https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/${name}/default/24px.svg`;
+
   useEffect(() => {
     if (metodeBayar === 'qris' && orderResult && !qrisDataUrl && items.length > 0) {
       generateQrisReceipt();
@@ -48,7 +49,6 @@ export default function MenuPage({ onShowAuth, onNavigate }) {
       .finally(() => setLoading(false));
   }, []);
 
-  // ── FILTER GABUNGAN: Kategori + Search Bar ──
   const filtered = menu.filter(m => {
     const matchesCategory = activeKat === 'semua' || m.id_kategori === activeKat;
     const matchesSearch = m.nama_menu.toLowerCase().includes(searchQuery.toLowerCase());
@@ -134,42 +134,27 @@ export default function MenuPage({ onShowAuth, onNavigate }) {
   }
 
   return (
-    <div className="menu-page" style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-      
+    <div className="menu-page">
       {/* ── Tombol Kembali ── */}
-      <button
-        onClick={() => onNavigate('landing')}
-        style={{
-          background: 'none', border: 'none', color: '#ffb347', cursor: 'pointer',
-          fontSize: '15px', padding: '0 0 15px 0', display: 'flex', alignItems: 'center', gap: '6px'
-        }}
-      >
-        ← Kembali ke Beranda
+      <button onClick={() => onNavigate('landing')} className="btn-back-home">
+        <img src={iconUrl('arrow_back')} className="icon-img inline-icon" alt="" /> Kembali ke Beranda
       </button>
 
       {/* ── Search Bar ── */}
-      <div className="search-wrapper" style={{ marginBottom: '25px' }}>
-        <input 
-          type="text" 
-          placeholder="🔎 Lagi pengen ngopi apa hari ini bray? Cari di sini..." 
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          style={{
-            width: '100%',
-            padding: '14px 20px',
-            background: '#1e1e1e',
-            border: '1px solid #333',
-            borderRadius: '10px',
-            color: '#fff',
-            fontSize: '14px',
-            outline: 'none',
-            boxSizing: 'border-box'
-          }}
-        />
+      <div className="search-wrapper">
+        <div className="search-input-box">
+          <img src={iconUrl('search')} className="search-box-icon" alt="" />
+          <input 
+            type="text" 
+            placeholder="Lagi pengen ngopi apa hari ini bray? Cari di sini..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
       </div>
 
       {/* ── Kategori filter ── */}
-      <div className="kat-bar" style={{ marginBottom: '25px' }}>
+      <div className="kat-bar">
         <button
           className={activeKat === 'semua' ? 'kat-btn active' : 'kat-btn'}
           onClick={() => setActiveKat('semua')}
@@ -186,11 +171,11 @@ export default function MenuPage({ onShowAuth, onNavigate }) {
       {/* ── Menu grid ── */}
       {loading ? (
         <div className="loading-state">
-          <div className="spinner" />
-          <p>Memuat menu...</p>
+          <div className="saas-spinner" />
+          <p>Memuat item menu...</p>
         </div>
       ) : (
-        <div className="menu-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '20px' }}>
+        <div className="menu-grid">
           {filtered.map(m => {
             const inCart = items.find(i => i.id_menu === m.id_menu);
             return (
@@ -199,7 +184,9 @@ export default function MenuPage({ onShowAuth, onNavigate }) {
                   {m.gambar ? (
                     <img src={`${UPLOADS_URL}/${m.gambar}`} alt={m.nama_menu} className="menu-img-actual" />
                   ) : (
-                    <span className="menu-img-emoji">{getCategoryEmoji(m.id_kategori, kategori)}</span>
+                    <div className="menu-img-fallback-icon">
+                      <img src={iconUrl(getCategoryIconName(m.id_kategori, kategori))} className="fallback-svg" alt="" />
+                    </div>
                   )}
                 </div>
                 <div className="menu-body">
@@ -220,8 +207,9 @@ export default function MenuPage({ onShowAuth, onNavigate }) {
           })}
           
           {filtered.length === 0 && (
-            <div className="empty-state" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', color: '#666' }}>
-              Menu belum tersedia atau tidak ditemukan bray.
+            <div className="empty-state-view">
+              <img src={iconUrl('info')} className="info-icon" alt="" />
+              <p>Menu belum tersedia atau tidak ditemukan bray.</p>
             </div>
           )}
         </div>
@@ -230,7 +218,8 @@ export default function MenuPage({ onShowAuth, onNavigate }) {
       {/* ── Floating Cart Button ── */}
       {itemCount > 0 && (
         <button className="cart-fab" onClick={() => { setCartOpen(true); setStep('cart'); }}>
-          🛒 {itemCount} item · {formatRp(total)}
+          <img src={iconUrl('local_mall')} className="icon-white fab-icon-img" alt="" />
+          <span>{itemCount} Item • {formatRp(total)}</span>
         </button>
       )}
 
@@ -242,7 +231,10 @@ export default function MenuPage({ onShowAuth, onNavigate }) {
             {step === 'cart' && (
               <>
                 <div className="drawer-hdr">
-                  <h2>🛒 Keranjang</h2>
+                  <div className="title-with-icon">
+                    <img src={iconUrl('local_mall')} className="hdr-svg-icon" alt="" />
+                    <h2>Keranjang Belanja</h2>
+                  </div>
                   <button className="close-btn" onClick={resetCart}>✕</button>
                 </div>
                 <div className="cart-items">
@@ -252,7 +244,7 @@ export default function MenuPage({ onShowAuth, onNavigate }) {
                         <span className="cart-name">{i.nama_menu}</span>
                         <span className="cart-price">{formatRp(i.harga)}</span>
                       </div>
-                      <div className="qty-ctrl">
+                      <div className="qty-ctrl size-sm">
                         <button onClick={() => updateQty(i.id_menu, i.jumlah - 1)}>−</button>
                         <span>{i.jumlah}</span>
                         <button onClick={() => updateQty(i.id_menu, i.jumlah + 1)}>+</button>
@@ -262,7 +254,7 @@ export default function MenuPage({ onShowAuth, onNavigate }) {
                   ))}
                 </div>
                 <div className="drawer-footer">
-                  <div className="total-row"><span>Total</span><strong>{formatRp(total)}</strong></div>
+                  <div className="total-row"><span>Total Pembayaran</span><strong>{formatRp(total)}</strong></div>
                   <button className="checkout-btn" onClick={() => setStep('tipe')}>Lanjut Pesan →</button>
                 </div>
               </>
@@ -271,30 +263,34 @@ export default function MenuPage({ onShowAuth, onNavigate }) {
             {step === 'tipe' && (
               <>
                 <div className="drawer-hdr">
-                  <button className="back-btn" onClick={() => setStep('cart')}>← Kembali</button>
+                  <button className="back-btn" onClick={() => setStep('cart')}>
+                    <img src={iconUrl('arrow_back')} className="inline-icon back-svg" alt="" /> Kembali
+                  </button>
                   <h2>Tipe Layanan</h2>
                 </div>
                 <div className="tipe-options">
                   {[
-                    { val: 'dine_in',   icon: '🍽️', label: 'Makan di Sini', desc: 'Nikmati di tempat' },
-                    { val: 'take_away', icon: '📦', label: 'Bawa Pulang',   desc: 'Dikemas untuk dibawa' },
+                    { val: 'dine_in',   icon: 'restaurant', label: 'Makan di Sini', desc: 'Nikmati santapan hangat langsung di tempat' },
+                    { val: 'take_away', icon: 'local_shipping', label: 'Bawa Pulang',   desc: 'Dikemas aman & praktis untuk dibawa' },
                   ].map(t => (
                     <div
                       key={t.val}
                       className={`tipe-card ${tipeLayanan === t.val ? 'selected' : ''}`}
                       onClick={() => setTipeLayanan(t.val)}
                     >
-                      <span className="tipe-icon">{t.icon}</span>
-                      <div><strong>{t.label}</strong><p>{t.desc}</p></div>
+                      <div className="tipe-icon-wrap">
+                        <img src={iconUrl(t.icon)} className="tipe-svg-icon" alt="" />
+                      </div>
+                      <div className="tipe-info-body"><strong>{t.label}</strong><p>{t.desc}</p></div>
                       {tipeLayanan === t.val && <span className="check">✓</span>}
                     </div>
                   ))}
                 </div>
-                <div className="field" style={{ padding: '0 20px', marginBottom: '16px', marginTop: '16px' }}>
-                  <label>Atas Nama (Untuk Panggilan)</label>
+                <div className="field form-input-drawer-spacing">
+                  <label>Atas Nama (Untuk Panggilan Antrean)</label>
                   <input
                     type="text"
-                    placeholder="Masukkan nama kamu..."
+                    placeholder="Masukkan nama lengkap kamu..."
                     value={namaPemesan}
                     onChange={e => setNamaPemesan(e.target.value)}
                     required
@@ -302,9 +298,9 @@ export default function MenuPage({ onShowAuth, onNavigate }) {
                 </div>
                 {err && <div className="err-box">{err}</div>}
                 <div className="drawer-footer">
-                  <div className="total-row"><span>Total</span><strong>{formatRp(total)}</strong></div>
+                  <div className="total-row"><span>Total Tagihan</span><strong>{formatRp(total)}</strong></div>
                   <button className="checkout-btn" onClick={handleOrder} disabled={processing}>
-                    {processing ? 'Memproses...' : 'Buat Pesanan →'}
+                    {processing ? 'Memproses...' : 'Buat Pesanan Sekarang →'}
                   </button>
                 </div>
               </>
@@ -313,47 +309,41 @@ export default function MenuPage({ onShowAuth, onNavigate }) {
             {step === 'bayar' && orderResult && (
               <>
                 <div className="drawer-hdr">
-                  <button className="back-btn" onClick={() => setStep('tipe')}>← Kembali</button>
-                  <h2>💳 Pembayaran</h2>
+                  <button className="back-btn" onClick={() => setStep('tipe')}>
+                    <img src={iconUrl('arrow_back')} className="inline-icon back-svg" alt="" /> Kembali
+                  </button>
+                  <h2>Metode Pembayaran</h2>
                 </div>
                 <div className="order-info-box">
-                  <div className="order-kode">{orderResult.kode_order}</div>
-                  <div className="order-total-lbl">Total Tagihan</div>
+                  <div className="order-kode">ORDER TOKEN: {orderResult.kode_order}</div>
+                  <div className="order-total-lbl">Total Nilai Tagihan</div>
                   <div className="order-total-val">{formatRp(orderResult.total_tagihan)}</div>
                 </div>
                 <div className="metode-list">
-                  <p className="metode-label">Pilih Metode Pembayaran</p>
+                  <p className="metode-label">Pilih Opsi Pembayaran Resmi</p>
                   {[
-                    { val: 'cash', icon: '💵', label: 'Tunai' },
-                    { val: 'qris', icon: '📱', label: 'QRIS' },
+                    { val: 'cash', icon: 'payments', label: 'Tunai / Cash di Kasir' },
+                    { val: 'qris', icon: 'qr_code_2', label: 'QRIS Digital Otomatis' },
                   ].map(m => (
                     <div
                       key={m.val}
                       className={`metode-card ${metodeBayar === m.val ? 'selected' : ''}`}
                       onClick={() => { setMetodeBayar(m.val); if (m.val !== 'qris') setQrisDataUrl(null); }}
                     >
-                      <span>{m.icon}</span><span>{m.label}</span>
+                      <img src={iconUrl(m.icon)} className="metode-svg-icon" alt="" />
+                      <span className="metode-text-lbl">{m.label}</span>
                       {metodeBayar === m.val && <span className="check">✓</span>}
                     </div>
                   ))}
                 </div>
 
                 {metodeBayar === 'qris' && (
-                  <div style={{
-                    padding: '0 20px', marginBottom: '16px', textAlign: 'center'
-                  }}>
-                    <p style={{ color: '#aaa', fontSize: '13px', marginBottom: '12px' }}>
-                      Scan barcode untuk kirim struk pesanan ke WhatsApp kasir.
+                  <div className="qris-box-wrapper">
+                    <p className="qris-help-text">
+                      Scan barcode di bawah untuk mengirim nota struk pesanan digital secara berkala langsung ke WhatsApp pusat Kasir.
                     </p>
-                    <div style={{
-                      background: '#fff', borderRadius: '12px', padding: '16px',
-                      display: 'inline-block'
-                    }}>
-                      <img
-                        src={qrisDataUrl}
-                        alt="QR"
-                        style={{ width: 200, height: 200 }}
-                      />
+                    <div className="qris-image-container">
+                      <img src={qrisDataUrl} alt="QRIS Gateway" />
                     </div>
                   </div>
                 )}
@@ -361,7 +351,7 @@ export default function MenuPage({ onShowAuth, onNavigate }) {
                 {err && <div className="err-box">{err}</div>}
                 <div className="drawer-footer">
                   <button className="checkout-btn" onClick={handleBayar} disabled={processing}>
-                    {processing ? 'Memproses...' : 'Bayar Sekarang →'}
+                    {processing ? 'Memproses Finansial...' : 'Selesaikan Pembayaran →'}
                   </button>
                 </div>
               </>
@@ -369,52 +359,40 @@ export default function MenuPage({ onShowAuth, onNavigate }) {
 
             {step === 'sukses' && transaksiResult && (
               <div className="sukses-view">
-                <div className="sukses-icon">{metodeBayar === 'cash' ? '✅' : '⏳'}</div>
-                <h2>{metodeBayar === 'cash' ? 'Pembayaran Berhasil!' : 'Pesanan Dibuat!'}</h2>
+                <div className="sukses-icon-animation-wrap">
+                  <img src={iconUrl(metodeBayar === 'cash' ? 'check_circle' : 'pending')} className="success-status-svg" alt="" />
+                </div>
+                <h2>{metodeBayar === 'cash' ? 'Pembayaran Sukses!' : 'Pesanan Berhasil Antre!'}</h2>
                 <div className="sukses-detail">
-                  <div className="sd-row"><span>No. Transaksi</span>#<strong>{transaksiResult.id_transaksi}</strong></div>
-                  <div className="sd-row"><span>Metode</span><strong style={{ textTransform:'capitalize' }}>{transaksiResult.metode_pembayaran}</strong></div>
-                  <div className="sd-row"><span>Total</span><strong>{formatRp(transaksiResult.total_harga)}</strong></div>
+                  <div className="sd-row"><span>No. Transaksi Digital</span>#<strong>{transaksiResult.id_transaksi}</strong></div>
+                  <div className="sd-row"><span>Metode Valid</span><strong className="uppercase">{transaksiResult.metode_pembayaran}</strong></div>
+                  <div className="sd-row"><span>Total Nominal</span><strong className="text-blue">{formatRp(transaksiResult.total_harga)}</strong></div>
                 </div>
 
                 {metodeBayar === 'qris' && qrisDataUrl && (
-                  <div style={{ textAlign: 'center', margin: '16px 0' }}>
-                    <p style={{ color: '#aaa', fontSize: '12px', marginBottom: '10px' }}>
-                      Scan barcode untuk kirim pesanan ke WhatsApp kasir
-                    </p>
-                    <div style={{
-                      background: '#fff', borderRadius: '12px', padding: '12px',
-                      display: 'inline-block'
-                    }}>
-                      <img
-                        src={qrisDataUrl}
-                        alt="QR"
-                        style={{ width: 180, height: 180 }}
-                      />
+                  <div className="qris-success-container">
+                    <p className="qris-help-text">Scan untuk sinkronisasi struk fisik kasir</p>
+                    <div className="qris-image-container size-sm">
+                      <img src={qrisDataUrl} alt="QR" />
                     </div>
-                    <div style={{ marginTop: '10px' }}>
+                    <div className="download-receipt-box">
                       <a
                         href={orderResult ? getStrukUrl(orderResult.id_order) : '#'}
                         target="_blank"
                         rel="noopener noreferrer"
-                        style={{
-                          display: 'inline-flex', alignItems: 'center', gap: '6px',
-                          padding: '8px 16px', background: '#FF9057', color: '#fff',
-                          borderRadius: '8px', textDecoration: 'none', fontSize: '13px',
-                          fontWeight: 'bold'
-                        }}
+                        className="btn-download-pdf-invoice"
                       >
-                        📄 Download Struk PDF
+                        <img src={iconUrl('description')} className="icon-white invoice-svg" alt="" /> Cetak Nota PDF
                       </a>
                     </div>
                   </div>
                 )}
 
                 <p className="sukses-msg">
-                  {metodeBayar === 'cash' ? 'Terima kasih! Pesananmu sedang disiapkan ☕' :
-                   'Scan QR di atas untuk kirim pesanan ke WhatsApp kasir.'}
+                  {metodeBayar === 'cash' ? 'Terima kasih banyak bray! Pesanan kamu telah dikirim ke dapur monitor.' :
+                   'Scan QR di atas untuk notifikasi instan langsung menuju WhatsApp kasir.'}
                 </p>
-                <button className="checkout-btn" onClick={resetCart}>Pesan Lagi</button>
+                <button className="checkout-btn" onClick={resetCart}>Pesan Menu Lainnya</button>
               </div>
             )}
           </div>
@@ -424,15 +402,15 @@ export default function MenuPage({ onShowAuth, onNavigate }) {
   );
 }
 
-// Helper: emoji berdasarkan kategori
-function getCategoryEmoji(id_kategori, kategoriList) {
+// Resolver nama ikon Google Material Icons
+function getCategoryIconName(id_kategori, kategoriList) {
   const kat = kategoriList.find(k => k.id_kategori === id_kategori);
   const nm  = kat?.nama_kategori?.toLowerCase() || '';
-  if (nm.includes('kopi') || nm.includes('coffee')) return '☕';
-  if (nm.includes('minum') || nm.includes('drink'))  return '🥤';
-  if (nm.includes('makan') || nm.includes('food'))   return '🍜';
-  if (nm.includes('snack') || nm.includes('cemil'))  return '🍟';
-  if (nm.includes('dessert') || nm.includes('manis'))return '🍰';
-  if (nm.includes('paket'))                           return '🎁';
-  return '🍽️';
+  if (nm.includes('kopi') || nm.includes('coffee')) return 'coffee';
+  if (nm.includes('minum') || nm.includes('drink'))  return 'local_bar';
+  if (nm.includes('makan') || nm.includes('food'))   return 'ramen_dining';
+  if (nm.includes('snack') || nm.includes('cemil'))  return 'bakery_dining';
+  if (nm.includes('dessert') || nm.includes('manis'))return 'cake';
+  if (nm.includes('paket'))                               return 'featured_seasonal';
+  return 'restaurant';
 }

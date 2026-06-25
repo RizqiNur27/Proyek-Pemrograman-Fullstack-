@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import '../css/AdminPage.css'
 import {
   getMenu,
   getKategori,
@@ -21,15 +22,15 @@ function formatRp(n) {
 }
 
 export default function AdminPage({ onNavigate }) {
-  const [tab, setTab]             = useState('dashboard'); // 'dashboard' | 'orders' | 'transaksi' | 'menu' | 'kategori'
-  const [menu, setMenu]           = useState([]);
+  const [tab, setTab]               = useState('dashboard'); // 'dashboard' | 'orders' | 'transaksi' | 'menu' | 'kategori'
+  const [menu, setMenu]             = useState([]);
   const [kategori, setKategori]   = useState([]);
   const [orders, setOrders]       = useState([]);
   const [transaksi, setTransaksi] = useState([]);
   const [harian, setHarian]       = useState([]);
   const [harianRingkasan, setHarianRingkasan] = useState({ totalPendapatan: 0, totalPesanan: 0 });
   const [loading, setLoading]     = useState(true);
-  const [err, setErr]             = useState('');
+  const [err, setErr]              = useState('');
   const [toast, setToast]         = useState(null);
   const [time, setTime] = useState(new Date());
 
@@ -43,6 +44,9 @@ export default function AdminPage({ onNavigate }) {
   const [gambarFile, setGambarFile] = useState(null);
   const [gambarPreview, setGambarPreview] = useState(null);
 
+  // URL Ikon Google Material (PNG / SVG)
+  const iconUrl = (name) => `https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/${name}/default/24px.svg`;
+
   // ── FUNGSI SUARA SINTESIS 
   function playNotificationSound() {
     try {
@@ -51,7 +55,6 @@ export default function AdminPage({ onNavigate }) {
       const gain = ctx.createGain();
       
       osc.type = 'sine';
-      // Nada melodi "Tring!" ceria (Kombinasi nada D5 ke A5)
       osc.frequency.setValueAtTime(587.33, ctx.currentTime); 
       osc.frequency.setValueAtTime(880, ctx.currentTime + 0.1); 
       
@@ -69,16 +72,12 @@ export default function AdminPage({ onNavigate }) {
   }
 
   useEffect(() => {
-  // Update jam setiap 1 detik (1000 milidetik)
     const timer = setInterval(() => {
       setTime(new Date());
     }, 1000);
-
-    // Bersihkan interval saat pindah halaman biar gak memory leak
     return () => clearInterval(timer);
   }, []);
 
-  // Helper Format Tanggal Indonesia (Contoh: Kamis, 4 Juni 2026)
   const formatTanggal = (date) => {
     return date.toLocaleDateString('id-ID', {
       weekday: 'long',
@@ -88,7 +87,6 @@ export default function AdminPage({ onNavigate }) {
     });
   };
 
-  // Helper Format Jam (Contoh: 18:59:34 WIB)
   const formatJam = (date) => {
     return date.toLocaleTimeString('id-ID', {
       hour: '2-digit',
@@ -97,7 +95,6 @@ export default function AdminPage({ onNavigate }) {
     }) + ' WIB';
   };
 
-  // Load semua data (dengan spinner — hanya untuk inisialisasi / manual refresh)
   async function loadData() {
     setLoading(true);
     const [m, k, o, t] = await Promise.all([
@@ -119,7 +116,6 @@ export default function AdminPage({ onNavigate }) {
     }).catch(() => {});
   }
 
-  // Refresh data di background tanpa spinner (dipanggil polling tiap 5 detik)
   let prevOrderLength = 0;
   async function refreshData() {
     try {
@@ -130,7 +126,6 @@ export default function AdminPage({ onNavigate }) {
       const newOrders = o.data || [];
       const newTransaksi = t.data || [];
 
-      // Deteksi pesanan baru untuk notifikasi
       if (prevOrderLength > 0 && newOrders.length > prevOrderLength) {
         const latestOrder = newOrders[newOrders.length - 1];
         setToast({
@@ -193,49 +188,14 @@ export default function AdminPage({ onNavigate }) {
     }
   }
 
-  // Fungsi khusus untuk nge-cek pesanan baru secara background
-  async function checkNewOrders() {
-    try {
-      const o = await getOrders();
-      const newOrders = o.data || [];
-      
-      setOrders(prevOrders => {
-        // Jika jumlah orderan di database bertambah dari jumlah sebelumnya
-        if (prevOrders.length > 0 && newOrders.length > prevOrders.length) {
-          const latestOrder = newOrders[newOrders.length - 1];
-          const nama = latestOrder.nama_pemesan || latestOrder.nama_user || '';
-          
-          setToast({
-            kode: latestOrder.kode_order,
-            nama: nama,
-            total: latestOrder.total_tagihan
-          });
-          
-          // Bunyikan Bell Kasir
-          playNotificationSound();
-          
-          // Hilangkan toast secara otomatis setelah 4 detik
-          setTimeout(() => setToast(null), 4000);
-        }
-        return newOrders;
-      });
-    } catch (e) {
-      console.error("Gagal melakukan background check pesanan:", e);
-    }
-  }
-
-  // Jalankan polling saat halaman admin terbuka
   useEffect(() => {
     loadData();
-
     const intervalId = setInterval(() => {
       refreshData();
     }, 5000);
-
     return () => clearInterval(intervalId);
   }, []);
 
-  // Handler Menu (Bawaan lama tetap aman bray)
   function openAdd() {
     setForm({ id_kategori: kategori[0]?.id_kategori || '', nama_menu: '', harga: '' });
     setGambarFile(null);
@@ -293,36 +253,42 @@ export default function AdminPage({ onNavigate }) {
     }
   }
 
-  // ── KALKULASI METRIK PRO BISNIS WARKOP ──
   const totalMenu       = menu.length;
   const totalOmset      = transaksi.reduce((sum, t) => sum + Number(t.total_harga), 0);
   const jumlahPesanan   = orders.length;
   const transaksiSukses = transaksi.length;
-  // Tambahan data leaderboard untuk demo kelompok bray
+
   const menuTerlaris = [
-    { nama: 'Es Kopi Susu Warkop', terjual: 48, harga: 15000, emoji: '☕' },
-    { nama: 'Mie Instan Goreng Nyemek', terjual: 36, harga: 12000, emoji: '🍜' },
-    { nama: 'Pancong Lumer Keju', terjual: 24, height: 10000, emoji: '🥞' },
+    { nama: 'Es Kopi Susu Warkop', terjual: 48, harga: 15000, icon: 'coffee' },
+    { nama: 'Mie Instan Goreng Nyemek', terjual: 36, harga: 12000, icon: 'ramen_dining' },
+    { nama: 'Pancong Lumer Keju', terjual: 24, harga: 10000, icon: 'cake' },
   ];
 
   return (
     <div className="admin-page">
-      {/* ── SIDEBAR BARU: LEBIH LENGKAP & PRO ── */}
+      {/* ── SIDEBAR SAAS MODERN ── */}
       <aside className="admin-sidebar">
-        <nav>
+        <div className="sidebar-brand">
+          <img src={iconUrl('storefront')} className="icon-img icon-white" alt="Warkop" />
+          <div>
+            <div className="brand-name">Warkop Si Bontot</div>
+            <div className="brand-sub">Dashboard Pemesanan</div>    
+          </div>
+        </div>
+        <nav className="sidebar-nav-container">
           {[
-            { key: 'dashboard', icon: '📊', label: 'Dashboard Overview' },
-            { key: 'orders',    icon: '🛎️', label: 'Live Orders Monitor' },
-            { key: 'transaksi', icon: '💸', label: 'Riwayat Keuangan' },
-            { key: 'menu',      icon: '🍽️', label: 'Kelola Item Menu' },
-            { key: 'kategori',  icon: '🏷️', label: 'Manajemen Kategori' },
+            { key: 'dashboard', icon: 'monitoring', label: 'Dashboard Overview' },
+            { key: 'orders',    icon: 'notifications_active', label: 'Live Orders Monitor' },
+            { key: 'transaksi', icon: 'account_balance_wallet', label: 'Riwayat Keuangan' },
+            { key: 'menu',      icon: 'restaurant_menu', label: 'Kelola Item Menu' },
+            { key: 'kategori',  icon: 'sell', label: 'Manajemen Kategori' },
           ].map(n => (
             <button
               key={n.key}
               className={`sidebar-nav ${tab === n.key ? 'active' : ''}`}
               onClick={() => setTab(n.key)}
             >
-              <span className="nav-icon">{n.icon}</span>
+              <img src={iconUrl(n.icon)} className="nav-icon-img" alt={n.label} />
               <span className="nav-label">{n.label}</span>
             </button>
           ))}
@@ -331,148 +297,113 @@ export default function AdminPage({ onNavigate }) {
 
       {/* ── MAIN CONTENT AREA ── */}
       <div className="admin-main">
-        {err && <div className="err-box" style={{marginBottom: '15px'}}>⚠️ Error: {err}</div>}
+        {err && <div className="err-box">⚠️ Error: {err}</div>}
 
-        {/* ── Tombol Kembali ── */}
-        <button
-          onClick={() => onNavigate('menu')}
-          style={{
-            background: 'none', border: 'none', color: '#ffb347', cursor: 'pointer',
-            fontSize: '15px', padding: '0 0 15px 0', display: 'flex', alignItems: 'center', gap: '6px',
-            marginTop: '-5px'
-          }}
-        >
-          ← Kembali ke Menu
+        <button className="btn-back-link" onClick={() => onNavigate('menu')}>
+          <img src={iconUrl('arrow_back')} className="icon-img inline-icon" alt="Back" /> Kembali ke Menu
         </button>
 
         {/* ── 1. DASHBOARD TAB OVERVIEW ── */}
         {tab === 'dashboard' && (
           <>
             <div className="admin-header">
-              <h1>Dashboard Overview</h1>
-              <p>Analisis riil performa bisnis Warkop Sibontot kamu.</p>
+              <div>
+                <h1>Dashboard Overview</h1>
+                <p>Analisis riil performa bisnis Warkop Sibontot kamu.</p>
+              </div>
             </div>
             
-            {/* ── WIDGET JAM & TANGGAL REALTIME OVERVIEW ── */}
-            <div className="admin-clock-widget" style={{
-              background: '#1e1e1e',
-              borderLeft: '5px solid #FF9057', // Warna khas warkop kita bray
-              borderRadius: '8px',
-              padding: '15px 25px',
-              marginBottom: '25px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
-              borderTop: '1px solid #2d2d2d',
-              borderRight: '1px solid #2d2d2d',
-              borderBottom: '1px solid #2d2d2d'
-            }}>
-              <div>
-                <span style={{ color: '#aaa', fontSize: '12px', uppercase: 'true', letterSpacing: '1px' }}>
-                  🗓️ TANGGAL OPERASIONAL
-                </span>
-                <h3 style={{ color: '#fff', margin: '5px 0 0 0', fontSize: '18px', fontWeight: '600' }}>
-                  {formatTanggal(time)}
-                </h3>
+            {/* ── WIDGET JAM REALTIME ── */}
+            <div className="admin-clock-widget">
+              <div className="clock-col">
+                <span className="widget-tag">🗓️ TANGGAL OPERASIONAL</span>
+                <h3>{formatTanggal(time)}</h3>
               </div>
-              
-              <div style={{ textAlign: 'right' }}>
-                <span style={{ color: '#aaa', fontSize: '12px', letterSpacing: '1px' }}>
-                  ⏰ WAKTU DIGITAL
-                </span>
-                <h2 style={{ 
-                  color: '#FF9057', 
-                  margin: '5px 0 0 0', 
-                  fontSize: '24px', 
-                  fontWeight: 'bold',
-                  fontFamily: 'monospace' // Biar angka jamnya anteng pas detiknya berubah
-                }}>
-                  {formatJam(time)}
-                </h2>
+              <div className="clock-col text-end-md">
+                <span className="widget-tag">⏰ WAKTU DIGITAL</span>
+                <h2 className="live-time-val">{formatJam(time)}</h2>
               </div>
             </div>
 
             {loading ? <Spinner /> : (
               <>
-                {/* Grid Statistik Keuangan Riil */}
                 <div className="stat-grid">
-                  <StatCard icon="💰" label="Total Omset Penjualan" value={formatRp(totalOmset)} color="#2DD4A0" />
-                  <StatCard icon="📦" label="Total Pesanan Masuk" value={`${jumlahPesanan} Pesanan`} color="#6C63FF" />
-                  <StatCard icon="✅" label="Transaksi Sukses" value={`${transaksiSukses} Dibayar`} color="#FF9057" />
-                  <StatCard icon="☕" label="Varian Menu Aktif" value={`${totalMenu} Produk`} color="#FFD166" />
+                  <StatCard icon="payments" label="Total Omset Penjualan" value={formatRp(totalOmset)} color="#1d4ed8" />
+                  <StatCard icon="local_mall" label="Total Pesanan Masuk" value={`${jumlahPesanan} Pesanan`} color="#3b82f6" />
+                  <StatCard icon="check_circle" label="Transaksi Sukses" value={`${transaksiSukses} Dibayar`} color="#22c55e" />
+                  <StatCard icon="coffee" label="Varian Menu Aktif" value={`${totalMenu} Produk`} color="#f59e0b" />
                 </div>
 
-                {/* Seksi Tampilan Cepat Pesanan Terbaru */}
-                <div className="admin-section-title" style={{marginTop: '30px'}}>Aktivitas Terkini</div>
-                <div className="dashboard-double-column" style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px'}}>
+                <div className="admin-section-title">Aktivitas Terkini</div>
+                <div className="dashboard-double-column">
                   
                   {/* Mini Live Order */}
-                  <div className="mini-card-panel" style={{background: '#1e1e1e', padding: '20px', borderRadius: '12px'}}>
-                    <h3>🛎️ Pesanan Terbaru</h3>
-                    <ul style={{listStyle: 'none', padding: 0, marginTop: '10px'}}>
+                  <div className="mini-card-panel">
+                    <h3><img src={iconUrl('buttons_alt')} className="panel-icon" alt="" /> Pesanan Terbaru</h3>
+                    <ul className="mini-list">
                       {orders.slice(-5).reverse().map(o => {
                         const nama = o.nama_pemesan || o.nama_user || '';
                         return (
-                        <li key={o.id_order} style={{display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #333'}}>
-                          <span>
-                            <strong style={{color: '#FF9057'}}>{o.kode_order}</strong>
-                            {nama && <small style={{color: '#aaa', marginLeft: '6px'}}>({nama})</small>}
-                            <br />
-                            <small style={{color: '#888'}}>{o.tipe_layanan === 'dine_in' ? '🍽️ Makan Di Sini' : '📦 Bawa Pulang'}</small>
-                          </span>
-                          <strong style={{color: 'var(--accent-color)'}}>{formatRp(o.total_tagihan)}</strong>
-                        </li>
-                      );})}
-                      {orders.length === 0 && <p style={{color: '#666'}}>Belum ada pesanan hari ini.</p>}
+                          <li key={o.id_order}>
+                            <div className="mini-list-left">
+                              <strong className="text-blue">{o.kode_order}</strong>
+                              {nama && <small className="text-muted block-name">({nama})</small>}
+                              <small className="sub-detail-text">{o.tipe_layanan === 'dine_in' ? '🍽️ Dine In' : '📦 Take Away'}</small>
+                            </div>
+                            <strong className="text-navy">{formatRp(o.total_tagihan)}</strong>
+                          </li>
+                        );
+                      })}
+                      {orders.length === 0 && <p className="empty-text">Belum ada pesanan hari ini.</p>}
                     </ul>
                   </div>
 
                   {/* Mini Cashflow */}
-                  <div className="mini-card-panel" style={{background: '#1e1e1e', padding: '20px', borderRadius: '12px'}}>
-                    <h3>💸 Pembayaran Masuk</h3>
-                    <ul style={{listStyle: 'none', padding: 0, marginTop: '10px'}}>
+                  <div className="mini-card-panel">
+                    <h3><img src={iconUrl('account_balance_wallet')} className="panel-icon" alt="" /> Pembayaran Masuk</h3>
+                    <ul className="mini-list">
                       {transaksi.slice(-5).reverse().map(t => (
-                        <li key={t.id_transaksi} style={{display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #333'}}>
-                          <span>💳 ID #{t.id_transaksi} <small style={{color: '#aaa', textTransform: 'uppercase'}}>({t.metode_pembayaran})</small></span>
-                          <strong style={{color: '#2DD4A0'}}>{formatRp(t.total_harga)}</strong>
+                        <li key={t.id_transaksi}>
+                          <div>
+                            <span className="tbl-id">#{t.id_transaksi}</span>
+                            <small className="sub-detail-text block-name uppercase">({t.metode_pembayaran})</small>
+                          </div>
+                          <strong className="text-green">{formatRp(t.total_harga)}</strong>
                         </li>
                       ))}
-                      {transaksi.length === 0 && <p style={{color: '#666'}}>Belum ada pembayaran masuk.</p>}
+                      {transaksi.length === 0 && <p className="empty-text">Belum ada pembayaran masuk.</p>}
                     </ul>
                   </div>
-                  <div className="mini-card-panel" style={{background: '#1e1e1e', padding: '20px', borderRadius: '12px'}}>
-                    <h3>🔥 Menu Terlaris (Leaderboard)</h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '15px' }}>
+
+                  {/* Leaderboard */}
+                  <div className="mini-card-panel">
+                    <h3><img src={iconUrl('leaderboard')} className="panel-icon" alt="" /> Menu Terlaris</h3>
+                    <div className="leaderboard-box">
                       {menuTerlaris.map((item, idx) => (
-                        <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                          <div style={{ fontSize: '20px', background: '#2d2d2d', width: '40px', height: '40px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            {item.emoji}
+                        <div key={idx} className="leaderboard-item">
+                          <div className="lead-icon-wrap">
+                            <img src={iconUrl(item.icon)} alt="" className="icon-img" />
                           </div>
-                          <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#fff' }}>{item.nama}</div>
-                            <div style={{ fontSize: '11px', color: '#888' }}>{item.terjual} Porsi Terjual</div>
+                          <div className="lead-info">
+                            <div className="lead-name">{item.nama}</div>
+                            <div className="lead-sold">{item.terjual} Porsi Terjual</div>
                           </div>
-                          <span style={{ fontSize: '13px', color: '#FF9057', fontWeight: 'bold' }}>{formatRp(item.harga)}</span>
+                          <span className="lead-price">{formatRp(item.harga)}</span>
                         </div>
                       ))}
                     </div>
                   </div>
-
                 </div>
 
-                {/* ── LAPORAN HARIAN ── */}
-                <div className="admin-section-title" style={{marginTop: '30px'}}>
+                {/* LAPORAN HARIAN */}
+                <div className="admin-section-title space-top">
                   Laporan Penjualan Hari Ini
-                  <button onClick={handleDownloadPdf} style={{
-                    marginLeft: '12px', padding: '6px 14px', borderRadius: '6px', fontSize: '12px',
-                    background: '#FF9057', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold',
-                    verticalAlign: 'middle'
-                  }}>
-                    📄 Download PDF
+                  <button onClick={handleDownloadPdf} className="btn-download-pdf">
+                    <img src={iconUrl('description')} className="icon-img btn-icon icon-white" alt="" /> Download PDF
                   </button>
                 </div>
-                <div className="admin-table-wrap" style={{marginTop: '10px'}}>
+                
+                <div className="admin-table-wrap">
                   <table className="admin-table">
                     <thead>
                       <tr>
@@ -486,18 +417,18 @@ export default function AdminPage({ onNavigate }) {
                         <tr key={item.id_menu || idx}>
                           <td><strong>{item.nama_menu}</strong></td>
                           <td>{item.total_terjual} porsi</td>
-                          <td style={{color: '#2DD4A0', fontWeight: 'bold'}}>{formatRp(item.total_pendapatan)}</td>
+                          <td className="text-green font-bold">{formatRp(item.total_pendapatan)}</td>
                         </tr>
                       ))}
                       {harian.filter(i => i.total_terjual > 0).length === 0 && (
-                        <tr><td colSpan="3" style={{textAlign:'center', color:'#666'}}>Belum ada penjualan hari ini.</td></tr>
+                        <tr><td colSpan="3" className="text-center text-muted">Belum ada penjualan hari ini.</td></tr>
                       )}
                     </tbody>
                     <tfoot>
-                      <tr style={{background: '#1a1a1a'}}>
+                      <tr className="table-footer-row">
                         <td><strong>Total</strong></td>
                         <td><strong>{harianRingkasan.totalPesanan} pesanan</strong></td>
-                        <td style={{color: '#2DD4A0', fontWeight: 'bold'}}>{formatRp(harianRingkasan.totalPendapatan)}</td>
+                        <td className="text-green font-bold">{formatRp(harianRingkasan.totalPendapatan)}</td>
                       </tr>
                     </tfoot>
                   </table>
@@ -507,99 +438,80 @@ export default function AdminPage({ onNavigate }) {
           </>
         )}
 
-        {/* ── 2. TAB LIVE ORDERS MONITOR (FITUR BARU KELOMPOK PRO) ── */}
+        {/* ── 2. TAB LIVE ORDERS MONITOR ── */}
         {tab === 'orders' && (
           <>
             <div className="admin-header">
-              <h1>🛎️ Live Orders Monitor</h1>
-              <p>Pantau pesanan yang dibuat oleh pelanggan/waiter secara live.</p>
+              <div>
+                <h1>Live Orders Monitor</h1>
+                <p>Pantau pesanan pelanggan/waiter secara live real-time.</p>
+              </div>
             </div>
             {loading ? <Spinner /> : (
               <div className="admin-table-wrap">
-                    <table className="admin-table">
-                    <thead>
-                      <tr>
-                        <th>Kode Order</th>
-                        <th>Pelanggan</th>
-                        <th>Item</th>
-                        <th>Tipe</th>
-                        <th>Total</th>
-                        <th>Status</th>
-                        <th>Aksi</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {orders.map(o => {
-                        const trx = transaksi.find(t => t.id_order === o.id_order);
-                        const nama = o.nama_pemesan || o.nama_user || '(Tanpa Nama)';
-                        return (
-                          <tr key={o.id_order}>
-                            <td><strong style={{color: '#FF9057'}}>{o.kode_order}</strong></td>
-                            <td><span style={{fontWeight: 600}}>{nama}</span></td>
-                            <td style={{fontSize: '12px', color: '#aaa'}}>
-                              {o.items && o.items.length > 0
-                                ? o.items.map(i => `${i.nama_menu} x${i.jumlah}`).join(', ')
-                                : '-'}
-                            </td>
-                            <td>
-                              <span className={`badge ${o.tipe_layanan}`}>
-                                {o.tipe_layanan === 'dine_in' ? '🍽️ Dine In' : '📦 Take Away'}
-                              </span>
-                            </td>
-                            <td><strong>{formatRp(o.total_tagihan)}</strong></td>
-                            <td>
-                              {o.status === 'selesai' ? (
-                                <span style={{
-                                  padding: '4px 10px', borderRadius: '20px', fontSize: '12px',
-                                  background: 'rgba(45, 212, 160, 0.2)', color: '#2DD4A0', border: '1px solid #2DD4A0'
-                                }}>
-                                  ✓ Lunas
-                                </span>
-                              ) : (
-                                <button
-                                  onClick={() => setModalBayar(o.id_order)}
-                                  style={{
-                                    padding: '6px 12px', borderRadius: '6px', fontSize: '12px',
-                                    background: '#FF9057', color: '#fff', border: 'none',
-                                    cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
-                                  }}
-                                >
-                                  ⏳ Proses Bayar
-                                </button>
-                              )}
-                            </td>
-                            <td>
-                              <button
-                                onClick={() => handleDeleteOrder(o.id_order, o.kode_order)}
-                                style={{
-                                  padding: '6px 12px', borderRadius: '6px', fontSize: '12px',
-                                  background: 'rgba(255, 77, 77, 0.15)', color: '#ff4d4d',
-                                  border: '1px solid #ff4d4d', cursor: 'pointer', fontWeight: 'bold',
-                                  whiteSpace: 'nowrap'
-                                }}
-                              >
-                                🗑 Hapus
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Kode Order</th>
+                      <th>Pelanggan</th>
+                      <th>Item</th>
+                      <th>Tipe</th>
+                      <th>Total</th>
+                      <th>Status</th>
+                      <th>Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {orders.map(o => {
+                      const nama = o.nama_pemesan || o.nama_user || '(Tanpa Nama)';
+                      return (
+                        <tr key={o.id_order}>
+                          <td><strong className="text-blue">{o.kode_order}</strong></td>
+                          <td><span className="font-semibold">{nama}</span></td>
+                          <td className="text-muted text-small">
+                            {o.items && o.items.length > 0 ? o.items.map(i => `${i.nama_menu} x${i.jumlah}`).join(', ') : '-'}
+                          </td>
+                          <td>
+                            <span className={`badge-layanan ${o.tipe_layanan}`}>
+                              {o.tipe_layanan === 'dine_in' ? '🍽️ Dine In' : '📦 Take Away'}
+                            </span>
+                          </td>
+                          <td><strong>{formatRp(o.total_tagihan)}</strong></td>
+                          <td>
+                            {o.status === 'selesai' ? (
+                              <span className="badge-status-paid">✓ Lunas</span>
+                            ) : (
+                              <button onClick={() => setModalBayar(o.id_order)} className="btn-process-pay">
+                                ⏳ Proses Bayar
                               </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                      {orders.length === 0 && (
-                        <tr><td colSpan="7" style={{textAlign:'center', color:'#666'}}>Belum ada pesanan masuk.</td></tr>
-                      )}
-                    </tbody>
-                  </table>
+                            )}
+                          </td>
+                          <td>
+                            <button onClick={() => handleDeleteOrder(o.id_order, o.kode_order)} className="btn-table-delete">
+                              Hapus
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {orders.length === 0 && (
+                      <tr><td colSpan="7" className="text-center text-muted">Belum ada pesanan masuk.</td></tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             )}
           </>
         )}
 
-        {/* ── 3. TAB RIWAYAT KEUANGAN (FITUR BARU CASHFLOW) ── */}
+        {/* ── 3. TAB RIWAYAT KEUANGAN ── */}
         {tab === 'transaksi' && (
           <>
             <div className="admin-header">
-              <h1>💸 Riwayat Transaksi Finansial</h1>
-              <p>Semua uang masuk yang sah dari tabel pembukuan <code>transaksi</code>.</p>
+              <div>
+                <h1>Riwayat Transaksi Finansial</h1>
+                <p>Semua log uang masuk pembukuan transaksi digital.</p>
+              </div>
             </div>
             {loading ? <Spinner /> : (
               <div className="admin-table-wrap">
@@ -619,53 +531,34 @@ export default function AdminPage({ onNavigate }) {
                     {transaksi.map(t => (
                       <tr key={t.id_transaksi}>
                         <td><span className="tbl-id">#{t.id_transaksi}</span></td>
-                        <td><strong style={{color: '#FF9057'}}>{t.kode_order || `#${t.id_order}`}</strong></td>
-                        <td style={{fontSize: '12px', color: '#aaa'}}>
-                          {t.items && t.items.length > 0
-                            ? t.items.map(i => `${i.nama_menu} x${i.jumlah}`).join(', ')
-                            : '-'}
+                        <td><strong className="text-blue">{t.kode_order || `#${t.id_order}`}</strong></td>
+                        <td className="text-muted text-small">
+                          {t.items && t.items.length > 0 ? t.items.map(i => `${i.nama_menu} x${i.jumlah}`).join(', ') : '-'}
                         </td>
                         <td>
-                          <span style={{textTransform:'uppercase', fontWeight:'bold', fontSize:'13px'}}>
+                          <span className="metode-tag font-bold">
                             {t.metode_pembayaran === 'cash' ? '💵 Cash' : t.metode_pembayaran === 'qris' ? '📱 QRIS' : '🏦 Transfer'}
                           </span>
                         </td>
                         <td>
                           {t.status_pembayaran === 'lunas' ? (
-                            <span style={{
-                              padding: '4px 10px', borderRadius: '20px', fontSize: '12px',
-                              background: 'rgba(45, 212, 160, 0.2)', color: '#2DD4A0', border: '1px solid #2DD4A0'
-                            }}>
-                              ✓ Lunas
-                            </span>
+                            <span className="badge-status-paid">✓ Lunas</span>
                           ) : (
-                            <span style={{
-                              padding: '4px 10px', borderRadius: '20px', fontSize: '12px',
-                              background: 'rgba(255, 179, 71, 0.2)', color: '#ffb347', border: '1px solid #ffb347'
-                            }}>
-                              ⏳ Belum
-                            </span>
+                            <span className="badge-status-pending">⏳ Belum</span>
                           )}
                         </td>
-                        <td><span style={{color: '#2DD4A0', fontWeight: 'bold'}}>{formatRp(t.total_harga)}</span></td>
+                        <td><span className="text-green font-bold">{formatRp(t.total_harga)}</span></td>
                         <td>
                           {t.status_pembayaran !== 'lunas' && (
-                            <button
-                              onClick={() => handleLunas(t.id_transaksi)}
-                              style={{
-                                padding: '6px 12px', borderRadius: '6px', fontSize: '12px',
-                                background: '#2DD4A0', color: '#fff', border: 'none',
-                                cursor: 'pointer', fontWeight: 'bold'
-                              }}
-                            >
-                              ✓ Lunas
+                            <button onClick={() => handleLunas(t.id_transaksi)} className="btn-table-action-success">
+                              ✓ Set Lunas
                             </button>
                           )}
                         </td>
                       </tr>
                     ))}
                     {transaksi.length === 0 && (
-                      <tr><td colSpan="7" style={{textAlign:'center', color:'#666'}}>Belum ada record transaksi keuangan.</td></tr>
+                      <tr><td colSpan="7" className="text-center text-muted">Belum ada record transaksi.</td></tr>
                     )}
                   </tbody>
                 </table>
@@ -674,15 +567,15 @@ export default function AdminPage({ onNavigate }) {
           </>
         )}
 
-        {/* ── 4. TAB KELOLA MENU (Bawaan Lama yang Dipertahankan) ── */}
+        {/* ── 4. TAB KELOLA MENU ── */}
         {tab === 'menu' && (
           <>
-            <div className="admin-header">
+            <div className="admin-header header-with-btn">
               <div>
                 <h1>Kelola Item Menu</h1>
-                <p>{menu.length} item menu terdaftar di database</p>
+                <p>{menu.length} produk terdaftar di database</p>
               </div>
-              <button className="btn-primary" onClick={openAdd}>+ Tambah Menu Baru</button>
+              <button className="btn-saas-primary" onClick={openAdd}>+ Tambah Menu</button>
             </div>
             {loading ? <Spinner /> : (
               <div className="admin-table-wrap">
@@ -704,21 +597,19 @@ export default function AdminPage({ onNavigate }) {
                         <tr key={m.id_menu}>
                           <td>
                             {m.gambar ? (
-                              <img src={`${UPLOADS_URL}/${m.gambar}`} alt={m.nama_menu}
-                                style={{width: '44px', height: '44px', borderRadius: '6px', objectFit: 'cover'}}
-                              />
+                              <img src={`${UPLOADS_URL}/${m.gambar}`} alt={m.nama_menu} className="tbl-menu-thumb" />
                             ) : (
-                              <span style={{color: 'var(--muted)', fontSize: '11px'}}>—</span>
+                              <span className="text-muted text-small">—</span>
                             )}
                           </td>
                           <td><span className="tbl-id">#{m.id_menu}</span></td>
                           <td><strong>{m.nama_menu}</strong></td>
                           <td><span className="tbl-kat">{kat?.nama_kategori || '—'}</span></td>
-                          <td><span className="tbl-price">{formatRp(m.harga)}</span></td>
+                          <td><span className="tbl-price font-bold">{formatRp(m.harga)}</span></td>
                           <td>
                             <div className="tbl-actions">
                               <button className="btn-edit" onClick={() => openEdit(m)}>Edit</button>
-                              <button className="btn-del"  onClick={() => handleDelete(m.id_menu, m.nama_menu)}>Hapus</button>
+                              <button className="btn-del" onClick={() => handleDelete(m.id_menu, m.nama_menu)}>Hapus</button>
                             </div>
                           </td>
                         </tr>
@@ -731,7 +622,7 @@ export default function AdminPage({ onNavigate }) {
           </>
         )}
 
-        {/* ── 5. TAB KATEGORI (Bawaan Lama yang Dipertahankan) ── */}
+        {/* ── 5. TAB KATEGORI ── */}
         {tab === 'kategori' && (
           <>
             <div className="admin-header">
@@ -741,14 +632,14 @@ export default function AdminPage({ onNavigate }) {
               </div>
             </div>
             {loading ? <Spinner /> : (
-              <div className="kat-grid">
+              <div className="kat-grid-container">
                 {kategori.map(k => {
                   const count = menu.filter(m => m.id_kategori === k.id_kategori).length;
                   return (
-                    <div key={k.id_kategori} className="kat-admin-card">
-                      <div className="kac-id">#{k.id_kategori}</div>
+                    <div key={k.id_kategori} className="kat-saas-card">
+                      <div className="kac-id">ID Kategori #{k.id_kategori}</div>
                       <div className="kac-name">{k.nama_kategori}</div>
-                      <div className="kac-count">{count} produk berkaitan</div>
+                      <div className="kac-count">{count} Produk Aktif</div>
                     </div>
                   );
                 })}
@@ -758,7 +649,7 @@ export default function AdminPage({ onNavigate }) {
         )}
       </div>
 
-      {/* ── MODAL FORM TAMBAH/EDIT MENU (Bawaan Lama yang Dipertahankan) ── */}
+      {/* ── MODAL MENU FORM ── */}
       {modal === 'menu' && (
         <div className="modal-overlay" onClick={() => setModal(null)}>
           <div className="modal-card" onClick={e => e.stopPropagation()}>
@@ -779,17 +670,17 @@ export default function AdminPage({ onNavigate }) {
               </div>
               <div className="field">
                 <label>Gambar Menu</label>
-                <div className="upload-area" style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
+                <div className="upload-area-box">
                   {(gambarPreview || form.gambar) && (
                     <img
                       src={gambarPreview || (form.gambar ? `${UPLOADS_URL}/${form.gambar}` : null)}
                       alt="Preview"
-                      style={{width: '64px', height: '64px', borderRadius: '8px', objectFit: 'cover', border: '1px solid var(--border)'}}
+                      className="form-image-preview"
                     />
                   )}
                   <input
                     type="file"
-                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    accept="image/*"
                     onChange={e => {
                       const file = e.target.files[0];
                       if (file) {
@@ -797,11 +688,7 @@ export default function AdminPage({ onNavigate }) {
                         setGambarPreview(URL.createObjectURL(file));
                       }
                     }}
-                    style={{
-                      background: 'var(--bg3)', border: '1px solid var(--border)',
-                      borderRadius: 'var(--r-sm)', color: 'var(--muted2)', padding: '8px',
-                      fontSize: '12px', flex: 1
-                    }}
+                    className="form-file-input"
                   />
                 </div>
               </div>
@@ -810,7 +697,7 @@ export default function AdminPage({ onNavigate }) {
                 <input
                   type="number"
                   placeholder="Contoh: 18000"
-                  value={form.formharga || form.harga}
+                  value={form.harga}
                   onChange={e => setForm(f => ({ ...f, harga: e.target.value }))}
                   min="0"
                   required
@@ -829,18 +716,22 @@ export default function AdminPage({ onNavigate }) {
                 </select>
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn-cancel" onClick={() => setModal(null)}>Batal</button>
-                <button type="submit" className="btn-primary" disabled={saving}>
-                  {saving ? 'Menyimpan...' : editId ? 'Simpan Perubahan' : 'Input Data'}
+                <button type="button" className="btn-saas-cancel" onClick={() => setModal(null)}>Batal</button>
+                <button type="submit" className="btn-saas-submit" disabled={saving}>
+                  {saving ? 'Menyimpan...' : editId ? 'Simpan' : 'Tambah'}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      {/* ── TOAST NOTIFICATION ── */}
       {toast && (
         <div className="toast-notification" onClick={() => setToast(null)}>
-          <div className="toast-icon">🛎️</div>
+          <div className="toast-icon-wrap">
+            <img src={iconUrl('notifications_active')} className="icon-img icon-white" alt="" />
+          </div>
           <div className="toast-body">
             <div className="toast-title">Pesanan Baru Masuk!</div>
             <div className="toast-desc">Kode: <strong>{toast.kode}</strong>{toast.nama ? ` — ${toast.nama}` : ''}</div>
@@ -850,22 +741,31 @@ export default function AdminPage({ onNavigate }) {
         </div>
       )}
 
+      {/* ── MODAL PROSES BAYAR CASHIER ── */}
       {modalBayar && (
         <div className="modal-overlay" onClick={() => setModalBayar(null)}>
-          <div className="modal-card" onClick={e => e.stopPropagation()}>
-            <h3>Pilih Metode Pembayaran</h3>
-            <select
-              value={metodeBayar}
-              onChange={(e) => setMetodeBayar(e.target.value)}
-              style={{ width: '100%', padding: '10px', margin: '20px 0' }}
-            >
-              <option value="cash">Cash</option>
-              <option value="qris">QRIS</option>
-              <option value="transfer">Transfer</option>
-            </select>
-            <div className="modal-footer">
-              <button onClick={() => setModalBayar(null)}>Batal</button>
-              <button onClick={submitBayar} className="btn-primary">Konfirmasi</button>
+          <div className="modal-saas-card" onClick={e => e.stopPropagation()}>
+            <div className="modal-hdr">
+              <h2>Kasir Pembayaran</h2>
+              <button className="close-btn" onClick={() => setModalBayar(null)}>✕</button>
+            </div>
+            <div className="modal-saas-body">
+              <div className="field">
+                <label>Pilih Metode Pembayaran</label>
+                <select
+                  value={metodeBayar}
+                  onChange={(e) => setMetodeBayar(e.target.value)}
+                  className="modal-select-input"
+                >
+                  <option value="cash">💵 Cash / Tunai</option>
+                  <option value="qris">📱 QRIS Digital</option>
+                  <option value="transfer">🏦 Bank Transfer</option>
+                </select>
+              </div>
+            </div>
+            <div className="modal-footer padding-box">
+              <button onClick={() => setModalBayar(null)} className="btn-saas-cancel">Batal</button>
+              <button onClick={submitBayar} className="btn-saas-submit">Konfirmasi Lunas</button>
             </div>
           </div>
         </div>
@@ -874,21 +774,24 @@ export default function AdminPage({ onNavigate }) {
   );
 }
 
-// Sub-Komponen Presentasional
 function StatCard({ icon, label, value, color }) {
+  const iconUrl = (name) => `https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/${name}/default/24px.svg`;
   return (
-    <div className="stat-card" style={{ '--accent-color': color, background: '#1e1e1e', padding: '20px', borderRadius: '12px', borderLeft: `5px solid ${color}` }}>
-      <div className="sc-icon" style={{fontSize: '24px', marginBottom: '5px'}}>{icon}</div>
-      <div className="sc-val" style={{fontSize: '20px', fontWeight: 'bold', color: '#fff'}}>{value}</div>
-      <div className="sc-label" style={{fontSize: '13px', color: '#888'}}>{label}</div>
+    <div className="stat-card" style={{ borderTop: `4px solid ${color}` }}>
+      <div className="sc-icon-wrap" style={{ background: `${color}12` }}>
+        <img src={iconUrl(icon)} style={{ filter: `drop-shadow(0px 0px 1px ${color})` }} className="stat-icon-img" alt="" />
+      </div>
+      <div className="sc-val">{value}</div>
+      <div className="sc-label">{label}</div>
     </div>
   );
 }
 
 function Spinner() {
   return (
-    <div className="loading-state" style={{textAlign: 'center', padding: '40px'}}>
-      <p>🔄 Mengambil data real-time database...</p>
+    <div className="loading-state">
+      <div className="saas-spinner"></div>
+      <p>Mengambil data riil database...</p>
     </div>
   );
 }

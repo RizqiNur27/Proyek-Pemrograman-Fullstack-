@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { login, register } from '../api';
 import { useAuth } from '../context/AuthContext';
-
+import '../css/AuthPage.css'
 export default function AuthPage({ onSuccess, onClose }) {
   const { loginUser } = useAuth();
   const [mode, setMode] = useState('login'); // 'login' | 'register'
@@ -39,25 +39,29 @@ export default function AuthPage({ onSuccess, onClose }) {
 
   return (
     <div className="auth-overlay" onClick={onClose}>
-      <div className="auth-card" style={{position:'relative'}} onClick={e => e.stopPropagation()}>
-        <button
-          onClick={onClose}
-          style={{
-            position: 'absolute', top: '12px', right: '16px', background: 'none',
-            border: 'none', color: '#999', fontSize: '22px', cursor: 'pointer', lineHeight: 1, zIndex: 1
-          }}
-        >✕</button>
+      <div className="auth-card" onClick={e => e.stopPropagation()}>
+        {/* Tombol close menggunakan class css murni agar bersih */}
+        <button className="auth-close-btn" onClick={onClose}>✕</button>
+        
         <div className="auth-brand">
-          <span className="auth-logo">☕</span>
+          <img src="img/logo-warkop.svg" className="auth-logo-img" alt="Logo Warkop" />
           <h1>Warkop Sibontot</h1>
           <p>Pesan dari mana saja, kapan saja</p>
         </div>
 
         <div className="auth-tabs">
-          <button className={mode === 'login' ? 'active' : ''} onClick={() => { setMode('login'); setError(''); }}>
+          <button 
+            type="button"
+            className={mode === 'login' ? 'active' : ''} 
+            onClick={() => { setMode('login'); setError(''); }}
+          >
             Masuk
           </button>
-          <button className={mode === 'register' ? 'active' : ''} onClick={() => { setMode('register'); setError(''); }}>
+          <button 
+            type="button"
+            className={mode === 'register' ? 'active' : ''} 
+            onClick={() => { setMode('register'); setError(''); }}
+          >
             Daftar
           </button>
         </div>
@@ -66,16 +70,39 @@ export default function AuthPage({ onSuccess, onClose }) {
           {mode === 'register' && (
             <div className="field">
               <label>Nama Lengkap</label>
-              <input name="nama" type="text" placeholder="Nama kamu" value={form.nama} onChange={handleChange} required />
+              <input 
+                name="nama" 
+                type="text" 
+                placeholder="Nama kamu" 
+                value={form.nama} 
+                onChange={handleChange} 
+                required 
+              />
             </div>
           )}
+          
           <div className="field">
-            <label>Email</label>
-            <input name="email" type="email" placeholder="email@contoh.com" value={form.email} onChange={handleChange} required />
+            <label>Email Address</label>
+            <input 
+              name="email" 
+              type="email" 
+              placeholder="email@contoh.com" 
+              value={form.email} 
+              onChange={handleChange} 
+              required 
+            />
           </div>
+          
           <div className="field">
             <label>Password</label>
-            <input name="password" type="password" placeholder="••••••••" value={form.password} onChange={handleChange} required />
+            <input 
+              name="password" 
+              type="password" 
+              placeholder="••••••••" 
+              value={form.password} 
+              onChange={handleChange} 
+              required 
+            />
           </div>
 
           {error && <div className="auth-error">{error}</div>}

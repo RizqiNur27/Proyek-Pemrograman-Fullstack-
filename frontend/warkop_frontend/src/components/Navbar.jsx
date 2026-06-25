@@ -22,8 +22,8 @@ export default function DashNavbar({ page, setPage, onShowAuth }) {
       <div className="nav-brand" onClick={() => setPage('menu')} style={{ cursor: 'pointer' }}>
         <span className="nav-logo">☕</span>
         <div>
-          <div className="nav-title">Warkop Sibontot</div>
-          <div className="nav-sub">Online Ordering System</div>
+          <div className="nav-title">Warkop Si Bontot</div>
+          <div className="nav-sub">Pemesanan Online</div>
         </div>
       </div>
 

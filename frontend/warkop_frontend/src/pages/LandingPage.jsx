@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import '../css/landing-style.css';
+import '../css/LandingPage.css';
 
 const menuData = [
     {
