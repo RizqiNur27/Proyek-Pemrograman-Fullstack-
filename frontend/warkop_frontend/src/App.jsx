@@ -19,7 +19,6 @@ function AppInner() {
     setShowAuth(false);
   }
 
-  // Kalau admin buka halaman menu, tetap bisa; kalau buka admin, cek dulu
   const currentPage = (page === 'admin' && !isAdmin) ? 'menu' : page;
 
   return (

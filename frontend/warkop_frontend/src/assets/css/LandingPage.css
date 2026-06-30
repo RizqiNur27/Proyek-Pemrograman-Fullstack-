@@ -22,12 +22,10 @@
             --transition: .3s cubic-bezier(.4, 0, .2, 1);
         }
 
-        /* 1. Kembalikan background dasar landing page menjadi putih */
         .landing-wrapper {
             background-color: #ffffff;
         }
 
-        /* 2. Target SPESIFIK section yang seharusnya putih terang */
         .landing-wrapper #about,
         .landing-wrapper #tim,
         .landing-wrapper #testimoni,
@@ -35,22 +33,20 @@
             background-color: #ffffff !important;
         }
 
-        /* 3. Perbaiki warna teks di section About yang bertabrakan dengan tema Dashboard */
         .landing-wrapper #about .section-heading,
         .landing-wrapper #about .section-eyebrow {
-            color: #0f172a !important; /* Warna gelap tegas (Navy) */
+            color: #0f172a !important;
         }
 
         .landing-wrapper #about p.lead-text,
         .landing-wrapper #about .about-point p {
-            color: #475569 !important; /* Warna abu-abu gelap agar mudah dibaca */
+            color: #475569 !important;
         }
 
         .landing-wrapper #about .about-point p strong {
             color: #0f172a !important;
         }
 
-        /* 4. Pastikan teks di section Tim & Testimoni juga kembali gelap */
         .landing-wrapper #tim h2,
         .landing-wrapper #tim p,
         .landing-wrapper #testimoni h2 {
@@ -138,6 +134,51 @@
             text-transform: uppercase;
         }
 
+        .navbar-toggler-icon {
+            background-image: none !important;
+        }
+
+        .navbar-toggler-icon::before,
+        .navbar-toggler-icon::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: rgba(255, 255, 255, .8);
+            transition: all .3s ease;
+        }
+
+        .navbar-toggler-icon::before {
+            top: 0;
+        }
+
+        .navbar-toggler-icon::after {
+            bottom: 0;
+        }
+
+        .navbar-toggler-icon span {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: rgba(255, 255, 255, .8);
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon::before {
+            top: 50%;
+            transform: translateY(-50%) rotate(45deg);
+        }
+
+        .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon::after {
+            bottom: 50%;
+            transform: translateY(50%) rotate(-45deg);
+        }
+
+        .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon span {
+            opacity: 0;
+        }
+
         #mainNav .nav-link {
             color: rgba(255, 255, 255, .78) !important;
             font-weight: 600;
@@ -189,7 +230,6 @@
             box-shadow: 0 6px 20px rgba(245, 158, 11, .3);
         }
 
-        /* Jam realtime di navbar */
         #live-clock {
             display: flex;
             align-items: center;
@@ -348,7 +388,6 @@
             border-color: rgba(255, 255, 255, .45);
         }
 
-        /* Stat pills di hero */
         .hero-stats {
             margin-top: 48px;
             display: flex;
@@ -384,7 +423,6 @@
             align-self: stretch;
         }
 
-        /* Carousel dots */
         .carousel-dots {
             position: absolute;
             bottom: 36px;
@@ -596,8 +634,8 @@
         }
 
         /* =========================================================
-           MENU
-        ========================================================= */
+    MENU (FIX WARNA TEKS UNTUK KARTU BACKGROUND PUTIH)
+========================================================= */
         .menu-section {
             background: var(--navy);
             padding: 90px 0;
@@ -632,9 +670,10 @@
             color: var(--navy);
         }
 
+        /* Base Card - Dipaksa Putih Bersih */
         .menu-card {
-            background: var(--navy-mid);
-            border: 1px solid rgba(255, 255, 255, .05);
+            background: var(--white) !important;
+            border: 1px solid rgba(15, 23, 42, .07) !important;
             border-radius: var(--radius-md);
             padding: 24px;
             height: 100%;
@@ -643,34 +682,24 @@
 
         .menu-card:hover {
             transform: translateY(-5px);
-            border-color: rgba(245, 158, 11, .3);
-            box-shadow: 0 12px 36px rgba(0, 0, 0, .25);
+            border-color: var(--blue) !important;
+            box-shadow: 0 12px 36px rgba(0, 0, 0, .12);
         }
 
-        .menu-card.food-card {
-            background: var(--white);
-            border-color: rgba(15, 23, 42, .07);
-        }
-
-        .menu-card.food-card:hover {
-            border-color: var(--blue);
-        }
-
+        /* Judul Kategori (Kopi Panas, Es Kopi, Makanan, dll) */
         .menu-card-title {
             font-family: var(--serif);
             font-size: 1.15rem;
             font-weight: 900;
-            color: var(--white);
-            border-bottom: 2px solid var(--amber);
+            color: var(--navy) !important;
+            /* Teks otomatis jadi Gelap */
+            border-bottom: 2px solid var(--blue) !important;
+            /* Garis bawah biru elegan */
             padding-bottom: 10px;
             margin-bottom: 14px;
         }
 
-        .menu-card.food-card .menu-card-title {
-            color: var(--navy);
-            border-bottom-color: var(--blue);
-        }
-
+        /* Label Kolom (MENU / HARGA) */
         .menu-col-labels {
             display: flex;
             justify-content: space-between;
@@ -678,13 +707,10 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 1.2px;
-            color: rgba(255, 255, 255, .35);
+            color: var(--muted) !important;
+            /* Teks otomatis abu-abu gelap */
             padding-bottom: 8px;
             margin-bottom: 4px;
-        }
-
-        .menu-card.food-card .menu-col-labels {
-            color: var(--muted);
         }
 
         .menu-list {
@@ -693,33 +719,28 @@
             margin: 0;
         }
 
+        /* Item Menu Biasa (Bukan Terlaris/Favorit) */
         .menu-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 9px 0;
-            border-bottom: 1px dashed rgba(255, 255, 255, .07);
+            border-bottom: 1px dashed rgba(15, 23, 42, .07) !important;
             font-size: .88rem;
-            color: rgba(255, 255, 255, .8);
+            color: var(--navy-mid) !important;
+            /* Teks otomatis Navy Gelap */
             gap: 10px;
-        }
-
-        .menu-card.food-card .menu-item {
-            color: var(--navy-mid);
-            border-bottom-color: rgba(15, 23, 42, .07);
         }
 
         .menu-item:last-child {
             border-bottom: none;
         }
 
+        /* Item Menu Khusus Favorit (.is-fav) */
         .menu-item.is-fav {
-            color: var(--amber);
+            color: #c2410c !important;
+            /* Teks otomatis jingga tua / merah bata agar kontras */
             font-weight: 700;
-        }
-
-        .menu-card.food-card .menu-item.is-fav {
-            color: #c2410c;
         }
 
         .menu-item-name {
@@ -728,37 +749,30 @@
             gap: 6px;
         }
 
+        /* Dot Oranye Penanda Favorit */
         .fav-dot {
             width: 6px;
             height: 6px;
-            background: var(--amber);
+            background: #c2410c !important;
             border-radius: 50%;
             display: inline-block;
             flex-shrink: 0;
         }
 
-        .menu-card.food-card .fav-dot {
-            background: #c2410c;
-        }
-
+        /* Harga Item Biasa */
         .menu-item-price {
             font-family: 'Courier New', monospace;
             font-size: .83rem;
             font-weight: 700;
-            color: var(--blue-light);
+            color: var(--blue) !important;
+            /* Harga biasa otomatis Biru Gelap */
             white-space: nowrap;
         }
 
+        /* Harga Item Favorit */
         .menu-item.is-fav .menu-item-price {
-            color: var(--amber);
-        }
-
-        .menu-card.food-card .menu-item-price {
-            color: var(--blue);
-        }
-
-        .menu-card.food-card .menu-item.is-fav .menu-item-price {
-            color: #c2410c;
+            color: #c2410c !important;
+            /* Harga favorit otomatis mengikuti tema jingga */
         }
 
         /* =========================================================
@@ -1120,4 +1134,15 @@
                 margin-top: 10px;
                 border: 1px solid var(--border);
             }
+        }
+
+        .navbar-toggler,
+        .nav-toggle,
+        .hamburger-menu,
+        button[aria-controls="navbarNav"] {
+            position: relative !important;
+            z-index: 9999 !important;
+            padding: 12px !important;
+            cursor: pointer !important;
+            pointer-events: auto !important;
         }

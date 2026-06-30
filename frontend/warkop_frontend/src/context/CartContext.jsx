@@ -3,7 +3,7 @@ import { createContext, useContext, useState } from 'react';
 const CartContext = createContext(null);
 
 export function CartProvider({ children }) {
-  const [items, setItems] = useState([]); // [{ id_menu, nama_menu, harga, jumlah }]
+  const [items, setItems] = useState([]); 
 
   function addItem(menu) {
     setItems(prev => {

@@ -201,9 +201,6 @@ html, body {
 .auth-submit:hover:not(:disabled) { background: #2563eb; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(29, 78, 216, .4); }
 .auth-submit:disabled { opacity: .6; cursor: not-allowed; transform: none; box-shadow: none; }
 
-/* =====================================================
-   FIELDS
-   ===================================================== */
 .field { display: flex; flex-direction: column; gap: 6px; }
 .field label { font-size: 12px; font-weight: 700; color: var(--navy-mid); text-transform: uppercase; letter-spacing: 0.5px; }
 .field input,
@@ -225,12 +222,8 @@ html, body {
 .field input::placeholder,
 .field textarea::placeholder { color: var(--muted); }
 
-/* =====================================================
-   MENU PAGE
-   ===================================================== */
 .menu-page { padding: 40px 24px; max-width: 1200px; margin: 0 auto; }
 
-/* Kategori bar */
 .kat-bar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 32px; justify-content: center; }
 .kat-btn {
   padding: 8px 20px;
@@ -247,7 +240,6 @@ html, body {
 .kat-btn:hover { border-color: var(--blue-light); color: var(--blue); }
 .kat-btn.active { background: var(--blue); border-color: var(--blue); color: var(--white); box-shadow: 0 4px 14px rgba(29, 78, 216, .25); }
 
-/* Menu grid */
 .menu-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
@@ -298,7 +290,6 @@ html, body {
 }
 .add-btn:hover { background: var(--navy); color: var(--white); }
 
-/* Qty control */
 .qty-ctrl {
   display: flex;
   align-items: center;
@@ -321,7 +312,6 @@ html, body {
 .qty-ctrl button:hover { background: var(--blue); color: var(--white); }
 .qty-ctrl span { flex: 1; text-align: center; font-weight: 800; font-size: 14px; color: var(--navy); }
 
-/* FAB Cart */
 .cart-fab {
   position: fixed;
   bottom: 32px;
@@ -342,9 +332,6 @@ html, body {
 }
 .cart-fab:hover { background: #2563eb; transform: translateY(-3px) scale(1.02); }
 
-/* =====================================================
-   DRAWER / CART
-   ===================================================== */
 .drawer-overlay {
   position: fixed; inset: 0;
   background: rgba(15, 23, 42, .6);
@@ -422,7 +409,6 @@ html, body {
 .checkout-btn:hover:not(:disabled) { background: #2563eb; box-shadow: 0 6px 20px rgba(29, 78, 216, .3); }
 .checkout-btn:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
 
-/* Tipe layanan */
 .tipe-options { padding: 24px; display: flex; flex-direction: column; gap: 12px; flex: 1; }
 .tipe-card {
   display: flex;
@@ -443,7 +429,6 @@ html, body {
 .tipe-card p { font-size: 12px; color: var(--muted); margin-top: 2px; }
 .check { position: absolute; right: 20px; color: var(--blue); font-size: 18px; font-weight: 700; }
 
-/* Payment metode */
 .metode-list { padding: 24px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
 .metode-label { font-size: 12px; font-weight: 700; color: var(--navy-mid); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
 .metode-card {
@@ -464,7 +449,6 @@ html, body {
 .metode-card:hover { border-color: var(--blue-light); }
 .metode-card.selected { border-color: var(--blue); background: var(--blue-glow); color: var(--blue); }
 
-/* Order info box */
 .order-info-box {
   margin: 24px;
   padding: 24px;
@@ -477,7 +461,6 @@ html, body {
 .order-total-lbl { font-size: 13px; color: var(--navy-mid); font-weight: 600; }
 .order-total-val { font-family: var(--serif); font-size: 28px; font-weight: 900; color: var(--blue); margin-top: 4px; }
 
-/* Sukses view */
 .sukses-view {
   flex: 1;
   display: flex;
@@ -502,9 +485,6 @@ html, body {
 .sd-row strong { color: var(--navy); font-weight: 700; }
 .sukses-msg { font-size: 13px; color: var(--muted); margin-bottom: 28px; line-height: 1.6; }
 
-/* =====================================================
-   ADMIN PAGE
-   ===================================================== */
 .admin-page { display: flex; min-height: calc(100vh - 70px); background: #f8fafc; }
 
 .admin-sidebar {
@@ -566,7 +546,6 @@ html, body {
 
 .admin-section-title { font-family: var(--serif); font-size: 17px; font-weight: 900; color: var(--navy); margin-bottom: 18px; }
 
-/* Table */
 .admin-table-wrap { background: var(--white); border-radius: var(--radius-md); border: 1px solid var(--border-light); box-shadow: var(--shadow-card); overflow: hidden; }
 .admin-table { width: 100%; border-collapse: collapse; }
 .admin-table th {
@@ -613,9 +592,6 @@ html, body {
 }
 .btn-del:hover { background: var(--red); color: var(--white); }
 
-/* =====================================================
-   MODAL
-   ===================================================== */
 .modal-overlay {
   position: fixed; inset: 0;
   background: rgba(15, 23, 42, .6);
@@ -667,9 +643,6 @@ html, body {
 }
 .btn-cancel:hover { background: var(--off-white); color: var(--navy); }
 
-/* =====================================================
-   TOAST NOTIFICATION STYLING
-   ===================================================== */
 .toast-notification {
   position: fixed;
   bottom: 25px;
@@ -693,9 +666,6 @@ html, body {
 .toast-close { background: none; border: none; color: rgba(255,255,255,0.3); font-size: 14px; margin-left: auto; cursor: pointer; }
 .toast-close:hover { color: var(--white); }
 
-/* =====================================================
-   HAMBURGER MENU (Mobile Navbar)
-   ===================================================== */
 .nav-hamburger {
   display: none;
   width: 40px; height: 40px;
@@ -725,9 +695,6 @@ html, body {
 
 .nav-mobile-menu { display: flex; align-items: center; flex: 1; }
 
-/* =====================================================
-   RESPONSIVE LAYOUTS
-   ===================================================== */
 @media (max-width: 900px) {
   .admin-page { flex-direction: column; }
   .admin-sidebar {

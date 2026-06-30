@@ -15,7 +15,6 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  // Decode JWT payload (tanpa library)
   function decodeToken(tok) {
     try {
       const payload = tok.split('.')[1];

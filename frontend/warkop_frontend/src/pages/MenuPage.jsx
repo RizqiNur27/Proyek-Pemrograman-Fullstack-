@@ -3,7 +3,7 @@ import { getMenu, getKategori, createOrder, bayar, getStrukUrl, UPLOADS_URL } fr
 import QRCode from 'qrcode';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import '../css/MenuPage.css'
+import '../assets/css/MenuPage.css'
 
 function formatRp(n) {
   return 'Rp ' + Number(n).toLocaleString('id-ID');
@@ -146,7 +146,7 @@ export default function MenuPage({ onShowAuth, onNavigate }) {
           <img src={iconUrl('search')} className="search-box-icon" alt="" />
           <input 
             type="text" 
-            placeholder="Lagi pengen ngopi apa hari ini bray? Cari di sini..." 
+            placeholder="Lagi pengen ngopi apa hari ini kakk? Cari di sini ya..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />

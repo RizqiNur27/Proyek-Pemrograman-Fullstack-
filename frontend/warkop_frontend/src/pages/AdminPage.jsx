@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import '../css/AdminPage.css'
+import Swal from 'sweetalert2';
+import '../assets/css/AdminPage.css'
 import {
   getMenu,
   getKategori,
@@ -22,7 +23,7 @@ function formatRp(n) {
 }
 
 export default function AdminPage({ onNavigate }) {
-  const [tab, setTab]               = useState('dashboard'); // 'dashboard' | 'orders' | 'transaksi' | 'menu' | 'kategori'
+  const [tab, setTab]               = useState('dashboard'); 
   const [menu, setMenu]             = useState([]);
   const [kategori, setKategori]   = useState([]);
   const [orders, setOrders]       = useState([]);
@@ -33,6 +34,10 @@ export default function AdminPage({ onNavigate }) {
   const [err, setErr]              = useState('');
   const [toast, setToast]         = useState(null);
   const [time, setTime] = useState(new Date());
+
+  // State untuk Filter Live Orders
+  const [searchOrder, setSearchOrder] = useState('');
+  const [filterStatusOrder, setFilterStatusOrder] = useState('semua');
 
   // Modal state untuk Menu
   const [modal, setModal]     = useState(null);  // null | 'menu'
@@ -167,14 +172,59 @@ export default function AdminPage({ onNavigate }) {
     }
   }
 
-  async function handleDeleteOrder(id, kode) {
-    if (!window.confirm(`Hapus pesanan ${kode}?\nData transaksi & detail pesanan juga akan dihapus.`)) return;
-    try {
-      await deleteOrder(id);
-      loadData();
-    } catch (e) {
-      setErr('Gagal hapus pesanan: ' + e.message);
-    }
+  // Menggunakan SweetAlert2 untuk konfirmasi hapus pesanan
+  function handleDeleteOrder(id, kode) {
+    Swal.fire({
+      title: 'Hapus Pesanan?',
+      text: `Yakin mau hapus pesanan ${kode}? Data transaksi & detail pesanan juga akan dihapus permanen.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626', // Merah Danger
+      cancelButtonColor: '#64748b',  // Muted Gray
+      confirmButtonText: 'Ya, Hapus Saja!',
+      cancelButtonText: 'Batal',
+      reverseButtons: true, // Tombol batal di kiri
+      focusCancel: true, // Fokus ke tombol batal
+      customClass: {
+        container: 'my-swal-container', // Biar searah font Inter lo
+        popup: 'my-swal-popup',
+        title: 'my-swal-title',
+        confirmButton: 'btn-del', // Pakai styling tombol hapus lo
+        cancelButton: 'btn-saas-cancel' // Pakai styling tombol batal lo
+      },
+      buttonsStyling: false // Matikan styling default Swal biar nempel sama CSS lo
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        setLoading(true); // Tampilkan loading sebentar
+        try {
+          await deleteOrder(id);
+          Swal.fire({
+            title: 'Terhapus!',
+            text: `Pesanan ${kode} berhasil dihapus dari sistem.`,
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false,
+            customClass: {
+              container: 'my-swal-container',
+              popup: 'my-swal-popup'
+            }
+          });
+          loadData();
+        } catch (e) {
+          Swal.fire({
+            title: 'Gagal!',
+            text: 'Gagal hapus pesanan: ' + e.message,
+            icon: 'error',
+            customClass: {
+              container: 'my-swal-container',
+              popup: 'my-swal-popup'
+            }
+          });
+        } finally {
+          setLoading(false);
+        }
+      }
+    });
   }
 
   async function submitBayar() {
@@ -243,14 +293,59 @@ export default function AdminPage({ onNavigate }) {
     }
   }
 
-  async function handleDelete(id, nama) {
-    if (!window.confirm(`Hapus menu "${nama}"?`)) return;
-    try {
-      await deleteMenu(id);
-      loadData();
-    } catch (e) {
-      setErr(e.message);
-    }
+  // Menggunakan SweetAlert2 untuk konfirmasi hapus menu
+  function handleDelete(id, nama) {
+    Swal.fire({
+      title: 'Hapus Menu?',
+      text: `Yakin mau hapus menu "${nama}" permanen dari daftar?`,
+      icon: 'question', // Ikon tanda tanya biar lebih soft
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'Ya, Hapus!',
+      cancelButtonText: 'Batal',
+      reverseButtons: true,
+      focusCancel: true,
+      customClass: {
+        container: 'my-swal-container',
+        popup: 'my-swal-popup',
+        title: 'my-swal-title',
+        confirmButton: 'btn-del',
+        cancelButton: 'btn-saas-cancel'
+      },
+      buttonsStyling: false
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        setSaving(true); // Indikator proses
+        try {
+          await deleteMenu(id);
+          Swal.fire({
+            title: 'Menu Terhapus!',
+            text: `Menu "${nama}" berhasil dihapus.`,
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false,
+            customClass: {
+              container: 'my-swal-container',
+              popup: 'my-swal-popup'
+            }
+          });
+          loadData();
+        } catch (e) {
+          Swal.fire({
+            title: 'Gagal Hapus!',
+            text: 'Gagal hapus menu: ' + e.message,
+            icon: 'error',
+            customClass: {
+              container: 'my-swal-container',
+              popup: 'my-swal-popup'
+            }
+          });
+        } finally {
+          setSaving(false);
+        }
+      }
+    });
   }
 
   const totalMenu       = menu.length;
@@ -264,6 +359,22 @@ export default function AdminPage({ onNavigate }) {
     { nama: 'Pancong Lumer Keju', terjual: 24, harga: 10000, icon: 'cake' },
   ];
 
+  // Logika penyaringan untuk Tab Live Orders
+  const filteredOrders = orders.filter(o => {
+    const namaPelanggan = (o.nama_pemesan || o.nama_user || '').toLowerCase();
+    const kodeOrder = (o.kode_order || '').toLowerCase();
+    const keyword = searchOrder.toLowerCase();
+    
+    // Cek Search
+    const matchSearch = kodeOrder.includes(keyword) || namaPelanggan.includes(keyword);
+    
+    // Cek Status (Asumsi status di DB: 'selesai' atau undefined/pending)
+    const statusPesanan = o.status === 'selesai' ? 'selesai' : 'pending';
+    const matchStatus = filterStatusOrder === 'semua' ? true : statusPesanan === filterStatusOrder;
+
+    return matchSearch && matchStatus;
+  });
+
   return (
     <div className="admin-page">
       {/* ── SIDEBAR SAAS MODERN ── */}
@@ -272,7 +383,7 @@ export default function AdminPage({ onNavigate }) {
           <img src={iconUrl('storefront')} className="icon-img icon-white" alt="Warkop" />
           <div>
             <div className="brand-name">Warkop Si Bontot</div>
-            <div className="brand-sub">Dashboard Pemesanan</div>    
+            <div className="brand-sub">Sistem Kelola Warkop</div>   
           </div>
         </div>
         <nav className="sidebar-nav-container">
@@ -299,9 +410,7 @@ export default function AdminPage({ onNavigate }) {
       <div className="admin-main">
         {err && <div className="err-box">⚠️ Error: {err}</div>}
 
-        <button className="btn-back-link" onClick={() => onNavigate('menu')}>
-          <img src={iconUrl('arrow_back')} className="icon-img inline-icon" alt="Back" /> Kembali ke Menu
-        </button>
+       
 
         {/* ── 1. DASHBOARD TAB OVERVIEW ── */}
         {tab === 'dashboard' && (
@@ -309,7 +418,7 @@ export default function AdminPage({ onNavigate }) {
             <div className="admin-header">
               <div>
                 <h1>Dashboard Overview</h1>
-                <p>Analisis riil performa bisnis Warkop Sibontot kamu.</p>
+                <p>Cek performa bisnis dan laporan penjualan Warkop Si Bontot hari ini.</p>
               </div>
             </div>
             
@@ -438,7 +547,7 @@ export default function AdminPage({ onNavigate }) {
           </>
         )}
 
-        {/* ── 2. TAB LIVE ORDERS MONITOR ── */}
+        {/* ── 2. TAB LIVE ORDERS MONITOR (UPDATED WITH FILTER) ── */}
         {tab === 'orders' && (
           <>
             <div className="admin-header">
@@ -447,6 +556,27 @@ export default function AdminPage({ onNavigate }) {
                 <p>Pantau pesanan pelanggan/waiter secara live real-time.</p>
               </div>
             </div>
+
+            {/* AREA FILTER & SEARCH */}
+            <div className="filter-controls" style={{ display: 'flex', gap: '10px', marginBottom: '15px', alignItems: 'center' }}>
+              <input 
+                type="text" 
+                placeholder="🔍 Cari kode / nama pelanggan..." 
+                value={searchOrder}
+                onChange={(e) => setSearchOrder(e.target.value)}
+                style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #ccc', flex: '1' }}
+              />
+              <select 
+                value={filterStatusOrder} 
+                onChange={(e) => setFilterStatusOrder(e.target.value)}
+                style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #ccc' }}
+              >
+                <option value="semua">Semua Status</option>
+                <option value="pending">⏳ Menunggu Pembayaran</option>
+                <option value="selesai">✓ Lunas</option>
+              </select>
+            </div>
+
             {loading ? <Spinner /> : (
               <div className="admin-table-wrap">
                 <table className="admin-table">
@@ -462,7 +592,8 @@ export default function AdminPage({ onNavigate }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {orders.map(o => {
+                    {/* GUNAKAN filteredOrders BUKAN orders */}
+                    {filteredOrders.map(o => {
                       const nama = o.nama_pemesan || o.nama_user || '(Tanpa Nama)';
                       return (
                         <tr key={o.id_order}>
@@ -479,23 +610,23 @@ export default function AdminPage({ onNavigate }) {
                           <td><strong>{formatRp(o.total_tagihan)}</strong></td>
                           <td>
                             {o.status === 'selesai' ? (
-                              <span className="badge-status-paid">✓ Lunas</span>
+                              <span className="badge-status-paid" title="Pesanan ini sudah dibayar lunas">✓ Lunas</span>
                             ) : (
-                              <button onClick={() => setModalBayar(o.id_order)} className="btn-process-pay">
+                              <button onClick={() => setModalBayar(o.id_order)} className="btn-process-pay" title="Klik untuk memproses pembayaran kasir">
                                 ⏳ Proses Bayar
                               </button>
                             )}
                           </td>
                           <td>
-                            <button onClick={() => handleDeleteOrder(o.id_order, o.kode_order)} className="btn-table-delete">
+                            <button onClick={() => handleDeleteOrder(o.id_order, o.kode_order)} className="btn-table-delete" title="Hapus seluruh data pesanan ini">
                               Hapus
                             </button>
                           </td>
                         </tr>
                       );
                     })}
-                    {orders.length === 0 && (
-                      <tr><td colSpan="7" className="text-center text-muted">Belum ada pesanan masuk.</td></tr>
+                    {filteredOrders.length === 0 && (
+                      <tr><td colSpan="7" className="text-center text-muted empty-text">Tidak ada pesanan yang sesuai dengan filter pencarian.</td></tr>
                     )}
                   </tbody>
                 </table>
