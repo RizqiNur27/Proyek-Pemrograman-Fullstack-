@@ -670,7 +670,6 @@
             color: var(--navy);
         }
 
-        /* Base Card - Dipaksa Putih Bersih */
         .menu-card {
             background: var(--white) !important;
             border: 1px solid rgba(15, 23, 42, .07) !important;
@@ -686,20 +685,16 @@
             box-shadow: 0 12px 36px rgba(0, 0, 0, .12);
         }
 
-        /* Judul Kategori (Kopi Panas, Es Kopi, Makanan, dll) */
         .menu-card-title {
             font-family: var(--serif);
             font-size: 1.15rem;
             font-weight: 900;
             color: var(--navy) !important;
-            /* Teks otomatis jadi Gelap */
             border-bottom: 2px solid var(--blue) !important;
-            /* Garis bawah biru elegan */
             padding-bottom: 10px;
             margin-bottom: 14px;
         }
 
-        /* Label Kolom (MENU / HARGA) */
         .menu-col-labels {
             display: flex;
             justify-content: space-between;
@@ -708,7 +703,6 @@
             text-transform: uppercase;
             letter-spacing: 1.2px;
             color: var(--muted) !important;
-            /* Teks otomatis abu-abu gelap */
             padding-bottom: 8px;
             margin-bottom: 4px;
         }
@@ -719,7 +713,6 @@
             margin: 0;
         }
 
-        /* Item Menu Biasa (Bukan Terlaris/Favorit) */
         .menu-item {
             display: flex;
             justify-content: space-between;
@@ -728,7 +721,6 @@
             border-bottom: 1px dashed rgba(15, 23, 42, .07) !important;
             font-size: .88rem;
             color: var(--navy-mid) !important;
-            /* Teks otomatis Navy Gelap */
             gap: 10px;
         }
 
@@ -736,10 +728,8 @@
             border-bottom: none;
         }
 
-        /* Item Menu Khusus Favorit (.is-fav) */
         .menu-item.is-fav {
             color: #c2410c !important;
-            /* Teks otomatis jingga tua / merah bata agar kontras */
             font-weight: 700;
         }
 
@@ -749,7 +739,6 @@
             gap: 6px;
         }
 
-        /* Dot Oranye Penanda Favorit */
         .fav-dot {
             width: 6px;
             height: 6px;
@@ -759,20 +748,16 @@
             flex-shrink: 0;
         }
 
-        /* Harga Item Biasa */
         .menu-item-price {
             font-family: 'Courier New', monospace;
             font-size: .83rem;
             font-weight: 700;
             color: var(--blue) !important;
-            /* Harga biasa otomatis Biru Gelap */
             white-space: nowrap;
         }
 
-        /* Harga Item Favorit */
         .menu-item.is-fav .menu-item-price {
             color: #c2410c !important;
-            /* Harga favorit otomatis mengikuti tema jingga */
         }
 
         /* =========================================================

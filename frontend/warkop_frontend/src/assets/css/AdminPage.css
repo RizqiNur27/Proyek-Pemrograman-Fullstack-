@@ -773,7 +773,6 @@
   to { transform: translateX(0); opacity: 1; }
 }
 
-/* ── SPINNER / LOADING ── */
 .loading-state {
   display: flex;
   flex-direction: column;
@@ -797,7 +796,6 @@
   to { transform: rotate(360deg); }
 }
 
-/* ── UTILITIES ── */
 .text-blue { color: #2563eb; }
 .text-navy { color: #0f172a; }
 .text-green { color: #059669; }
@@ -810,51 +808,41 @@
 .empty-text { font-style: italic; color: #94a3b8; }
 .icon-white { filter: invert(1); }
 
-/* =========================================
-   Custom Styling untuk SweetAlert2
-========================================= */
 
-/* Pastikan font nempel sama font Inter/Nunito lo */
 .my-swal-container, .my-swal-popup {
   font-family: inherit !important;
 }
 
-/* Modifikasi tampilan Popup Modal */
 .my-swal-popup {
-  border-radius: 20px !important; /* Biar membulat ala SaaS lo */
+  border-radius: 20px !important; 
   padding: 30px !important;
   box-shadow: 0 15px 50px rgba(15, 23, 42, 0.2) !important;
 }
 
-/* Styling Judul Modal */
 .my-swal-title {
-  font-family: 'Playfair Display', Georgia, serif !important; /* Gunakan Playfair ala header lo */
+  font-family: 'Playfair Display', Georgia, serif !important; 
   font-weight: 900 !important;
   font-size: 1.6rem !important;
   color: #0f172a !important;
 }
 
-/* Styling Teks Deskripsi Modal */
 .swal2-html-container {
   color: #64748b !important;
   font-size: 0.95rem !important;
   margin-top: 15px !important;
 }
 
-/* Styling Ikon Warning/Success/Error */
 .swal2-icon {
   margin-top: 20px !important;
 }
 
-/* Styling Area Tombol Aksi */
 .swal2-actions {
   gap: 12px !important;
   margin-top: 30px !important;
-  justify-content: flex-end !important; /* Searah modal footer lo */
+  justify-content: flex-end !important; 
 }
 
-/* Tweak khusus tombol Custom Class yang kita pasang di JS */
 .swal2-confirm.btn-del, .swal2-cancel.btn-saas-cancel {
-  padding: 10px 20px !important; /* Sesuaikan padding */
+  padding: 10px 20px !important; 
   font-size: 0.9rem !important;
 }
