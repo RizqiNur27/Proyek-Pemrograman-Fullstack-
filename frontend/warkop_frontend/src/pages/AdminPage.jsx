@@ -35,11 +35,9 @@ export default function AdminPage({ onNavigate }) {
   const [toast, setToast]         = useState(null);
   const [time, setTime] = useState(new Date());
 
-  // State untuk Filter Live Orders
   const [searchOrder, setSearchOrder] = useState('');
   const [filterStatusOrder, setFilterStatusOrder] = useState('semua');
 
-  // Modal state untuk Menu
   const [modal, setModal]     = useState(null);  // null | 'menu'
   const [modalBayar, setModalBayar] = useState(null);
   const [metodeBayar, setMetodeBayar] = useState('cash');
@@ -49,10 +47,8 @@ export default function AdminPage({ onNavigate }) {
   const [gambarFile, setGambarFile] = useState(null);
   const [gambarPreview, setGambarPreview] = useState(null);
 
-  // URL Ikon Google Material (PNG / SVG)
   const iconUrl = (name) => `https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/${name}/default/24px.svg`;
 
-  // ── FUNGSI SUARA SINTESIS 
   function playNotificationSound() {
     try {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -172,30 +168,29 @@ export default function AdminPage({ onNavigate }) {
     }
   }
 
-  // Menggunakan SweetAlert2 untuk konfirmasi hapus pesanan
   function handleDeleteOrder(id, kode) {
     Swal.fire({
       title: 'Hapus Pesanan?',
       text: `Yakin mau hapus pesanan ${kode}? Data transaksi & detail pesanan juga akan dihapus permanen.`,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#dc2626', // Merah Danger
-      cancelButtonColor: '#64748b',  // Muted Gray
+      confirmButtonColor: '#dc2626', 
+      cancelButtonColor: '#64748b',  
       confirmButtonText: 'Ya, Hapus Saja!',
       cancelButtonText: 'Batal',
-      reverseButtons: true, // Tombol batal di kiri
-      focusCancel: true, // Fokus ke tombol batal
+      reverseButtons: true, 
+      focusCancel: true, 
       customClass: {
-        container: 'my-swal-container', // Biar searah font Inter lo
+        container: 'my-swal-container', 
         popup: 'my-swal-popup',
         title: 'my-swal-title',
-        confirmButton: 'btn-del', // Pakai styling tombol hapus lo
-        cancelButton: 'btn-saas-cancel' // Pakai styling tombol batal lo
+        confirmButton: 'btn-del', 
+        cancelButton: 'btn-saas-cancel' 
       },
-      buttonsStyling: false // Matikan styling default Swal biar nempel sama CSS lo
+      buttonsStyling: false 
     }).then(async (result) => {
       if (result.isConfirmed) {
-        setLoading(true); // Tampilkan loading sebentar
+        setLoading(true); 
         try {
           await deleteOrder(id);
           Swal.fire({
@@ -293,7 +288,6 @@ export default function AdminPage({ onNavigate }) {
     }
   }
 
-  // Menggunakan SweetAlert2 untuk konfirmasi hapus menu
   function handleDelete(id, nama) {
     Swal.fire({
       title: 'Hapus Menu?',
@@ -316,7 +310,7 @@ export default function AdminPage({ onNavigate }) {
       buttonsStyling: false
     }).then(async (result) => {
       if (result.isConfirmed) {
-        setSaving(true); // Indikator proses
+        setSaving(true);
         try {
           await deleteMenu(id);
           Swal.fire({
@@ -359,16 +353,13 @@ export default function AdminPage({ onNavigate }) {
     { nama: 'Pancong Lumer Keju', terjual: 24, harga: 10000, icon: 'cake' },
   ];
 
-  // Logika penyaringan untuk Tab Live Orders
   const filteredOrders = orders.filter(o => {
     const namaPelanggan = (o.nama_pemesan || o.nama_user || '').toLowerCase();
     const kodeOrder = (o.kode_order || '').toLowerCase();
     const keyword = searchOrder.toLowerCase();
     
-    // Cek Search
     const matchSearch = kodeOrder.includes(keyword) || namaPelanggan.includes(keyword);
     
-    // Cek Status (Asumsi status di DB: 'selesai' atau undefined/pending)
     const statusPesanan = o.status === 'selesai' ? 'selesai' : 'pending';
     const matchStatus = filterStatusOrder === 'semua' ? true : statusPesanan === filterStatusOrder;
 
@@ -377,7 +368,6 @@ export default function AdminPage({ onNavigate }) {
 
   return (
     <div className="admin-page">
-      {/* ── SIDEBAR SAAS MODERN ── */}
       <aside className="admin-sidebar">
         <div className="sidebar-brand">
           <img src={iconUrl('storefront')} className="icon-img icon-white" alt="Warkop" />
@@ -406,13 +396,11 @@ export default function AdminPage({ onNavigate }) {
         </nav>
       </aside>
 
-      {/* ── MAIN CONTENT AREA ── */}
       <div className="admin-main">
         {err && <div className="err-box">⚠️ Error: {err}</div>}
 
        
 
-        {/* ── 1. DASHBOARD TAB OVERVIEW ── */}
         {tab === 'dashboard' && (
           <>
             <div className="admin-header">
@@ -422,7 +410,6 @@ export default function AdminPage({ onNavigate }) {
               </div>
             </div>
             
-            {/* ── WIDGET JAM REALTIME ── */}
             <div className="admin-clock-widget">
               <div className="clock-col">
                 <span className="widget-tag">🗓️ TANGGAL OPERASIONAL</span>
@@ -446,7 +433,6 @@ export default function AdminPage({ onNavigate }) {
                 <div className="admin-section-title">Aktivitas Terkini</div>
                 <div className="dashboard-double-column">
                   
-                  {/* Mini Live Order */}
                   <div className="mini-card-panel">
                     <h3><img src={iconUrl('buttons_alt')} className="panel-icon" alt="" /> Pesanan Terbaru</h3>
                     <ul className="mini-list">
@@ -504,7 +490,6 @@ export default function AdminPage({ onNavigate }) {
                   </div>
                 </div>
 
-                {/* LAPORAN HARIAN */}
                 <div className="admin-section-title space-top">
                   Laporan Penjualan Hari Ini
                   <button onClick={handleDownloadPdf} className="btn-download-pdf">
@@ -547,7 +532,6 @@ export default function AdminPage({ onNavigate }) {
           </>
         )}
 
-        {/* ── 2. TAB LIVE ORDERS MONITOR (UPDATED WITH FILTER) ── */}
         {tab === 'orders' && (
           <>
             <div className="admin-header">
@@ -557,7 +541,6 @@ export default function AdminPage({ onNavigate }) {
               </div>
             </div>
 
-            {/* AREA FILTER & SEARCH */}
             <div className="filter-controls" style={{ display: 'flex', gap: '10px', marginBottom: '15px', alignItems: 'center' }}>
               <input 
                 type="text" 
@@ -592,7 +575,6 @@ export default function AdminPage({ onNavigate }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {/* GUNAKAN filteredOrders BUKAN orders */}
                     {filteredOrders.map(o => {
                       const nama = o.nama_pemesan || o.nama_user || '(Tanpa Nama)';
                       return (
@@ -635,7 +617,6 @@ export default function AdminPage({ onNavigate }) {
           </>
         )}
 
-        {/* ── 3. TAB RIWAYAT KEUANGAN ── */}
         {tab === 'transaksi' && (
           <>
             <div className="admin-header">
@@ -698,7 +679,6 @@ export default function AdminPage({ onNavigate }) {
           </>
         )}
 
-        {/* ── 4. TAB KELOLA MENU ── */}
         {tab === 'menu' && (
           <>
             <div className="admin-header header-with-btn">
@@ -753,7 +733,6 @@ export default function AdminPage({ onNavigate }) {
           </>
         )}
 
-        {/* ── 5. TAB KATEGORI ── */}
         {tab === 'kategori' && (
           <>
             <div className="admin-header">
@@ -780,7 +759,6 @@ export default function AdminPage({ onNavigate }) {
         )}
       </div>
 
-      {/* ── MODAL MENU FORM ── */}
       {modal === 'menu' && (
         <div className="modal-overlay" onClick={() => setModal(null)}>
           <div className="modal-card" onClick={e => e.stopPropagation()}>
@@ -857,7 +835,6 @@ export default function AdminPage({ onNavigate }) {
         </div>
       )}
 
-      {/* ── TOAST NOTIFICATION ── */}
       {toast && (
         <div className="toast-notification" onClick={() => setToast(null)}>
           <div className="toast-icon-wrap">
@@ -872,7 +849,6 @@ export default function AdminPage({ onNavigate }) {
         </div>
       )}
 
-      {/* ── MODAL PROSES BAYAR CASHIER ── */}
       {modalBayar && (
         <div className="modal-overlay" onClick={() => setModalBayar(null)}>
           <div className="modal-saas-card" onClick={e => e.stopPropagation()}>
