@@ -208,6 +208,17 @@
   transition: var(--transition);
 }
 
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 9999;
+  pointer-events: auto;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border-radius: 8px;
+}
+
 @media (max-width: 768px) {
   .nav-hamburger {
     display: flex;

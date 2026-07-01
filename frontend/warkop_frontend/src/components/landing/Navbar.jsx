@@ -1,8 +1,20 @@
+import { useCart } from '../../context/CartContext';
+
 export default function Navbar({
   isScrolled,
   timeStr,
   onNavigate,
 }) {
+
+  const { itemCount, setCartOpen } = useCart();
+
+  const handleCartClick = () => {
+    if (onNavigate) onNavigate('menu');
+    setTimeout(() => {
+      setCartOpen(true);
+    }, 100);
+  };
+
   return (
     <nav
       id="mainNav"

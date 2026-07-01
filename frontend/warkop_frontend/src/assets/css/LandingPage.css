@@ -22,6 +22,15 @@
             --transition: .3s cubic-bezier(.4, 0, .2, 1);
         }
 
+        
+        .landing-container {
+        padding-left: 20px;
+        padding-right: 20px;
+        width: 100%;
+        box-sizing: border-box;
+        overflow-x: hidden;
+        }
+
         .landing-wrapper {
             background-color: #ffffff;
         }
@@ -253,6 +262,13 @@
             #live-clock {
                 display: none;
             }
+        }
+
+        @media (max-width: 576px) {
+        .navbar .container {
+            padding-left: 20px !important;
+            padding-right: 20px !important;
+        }
         }
 
 

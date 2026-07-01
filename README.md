@@ -15,7 +15,7 @@
 
 ---
 
-## 📖 About The Project
+## 📖 Tentang Proyek
 
 **Warkop Si Bontot** adalah aplikasi berbasis web **warkop kekinian** yang berbasis fullstack yang dirancang untuk mensimulasikan sistem pemesanan menu secara modern dan profesional.
 
@@ -75,13 +75,13 @@ Proyek ini dibuat sebagai **proyek kolaborasi tim** dengan tujuan menerapkan pra
 - RESTful API
 
 ### ☕ Database
-- PostgreSQL / MySQL
+- MySQL
 
 ### ☕ Tools & Environment
 - Git & GitHub
 - Docker
 - Postman
-- Kali Linux
+
 
 ---
 
@@ -95,9 +95,3 @@ Proyek ini dibuat sebagai **proyek kolaborasi tim** dengan tujuan menerapkan pra
 
 ---
 
-## 🚀 Getting Started
-
-### 📥 Clone Repository
-```bash
-git clone https://github.com/RizqiNur27/Proyek-Pemrograman-Fullstack-.git
-cd Proyek-P

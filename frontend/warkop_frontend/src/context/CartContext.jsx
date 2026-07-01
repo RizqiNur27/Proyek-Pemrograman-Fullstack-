@@ -3,7 +3,8 @@ import { createContext, useContext, useState } from 'react';
 const CartContext = createContext(null);
 
 export function CartProvider({ children }) {
-  const [items, setItems] = useState([]); 
+  const [items, setItems] = useState([]);
+  const [cartOpen, setCartOpen] = useState(false);
 
   function addItem(menu) {
     setItems(prev => {
@@ -32,7 +33,7 @@ export function CartProvider({ children }) {
   const itemCount= items.reduce((s, i) => s + i.jumlah, 0);
 
   return (
-    <CartContext.Provider value={{ items, addItem, removeItem, updateQty, clearCart, total, itemCount }}>
+    <CartContext.Provider value={{ items, addItem, removeItem, updateQty, clearCart, total, itemCount, cartOpen, setCartOpen }}>
       {children}
     </CartContext.Provider>
   );

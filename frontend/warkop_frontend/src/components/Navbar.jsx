@@ -3,9 +3,9 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import '../assets/css/Navbar.css';
 import logo from "../assets/img/logo-warkop.svg";
-export default function DashNavbar({ page, setPage, onShowAuth }) {
+export default function DashNavbar({ page, setPage, onShowAuth, onNavigate }) {
   const { user, logout, isAdmin } = useAuth();
-  const { itemCount } = useCart();
+  const { itemCount, setCartOpen } = useCart();
   const [menuOpen, setMenuOpen] = useState(false);
 
   function handleNavClick(p) {
@@ -17,6 +17,17 @@ export default function DashNavbar({ page, setPage, onShowAuth }) {
     onShowAuth();
     setMenuOpen(false);
   }
+
+  const handleCartClick = () => {
+    if (onNavigate) {
+      onNavigate('menu');
+    } else if (setPage) {
+      setPage('menu');
+    }
+    setTimeout(() => {
+      setCartOpen(true);
+    }, 100);
+  };
 
   return (
     <nav className="dash-navbar">
@@ -59,7 +70,7 @@ export default function DashNavbar({ page, setPage, onShowAuth }) {
 
           <div className="nav-right">
             {itemCount > 0 && (
-              <div className="nav-cart-badge" onClick={() => handleNavClick('cart')}>
+              <div className="nav-cart-badge" onClick={handleCartClick} style={{ cursor: 'pointer' }}>
                 <span className="cart-icon">🛒</span>
                 <span className="cart-count">{itemCount}</span>
               </div>
@@ -71,8 +82,8 @@ export default function DashNavbar({ page, setPage, onShowAuth }) {
                 <div className="nav-user-info">
                   <span className="nav-role">{user.role}</span>
                 </div>
-                <button 
-                  className="nav-logout" 
+                <button
+                  className="nav-logout"
                   onClick={() => { logout(); setMenuOpen(false); }}
                 >
                   Keluar

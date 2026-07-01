@@ -11,13 +11,12 @@ function formatRp(n) {
 
 export default function MenuPage({ onShowAuth, onNavigate }) {
   const { user } = useAuth();
-  const { items, addItem, removeItem, updateQty, clearCart, total, itemCount } = useCart();
+  const { items, addItem, removeItem, updateQty, clearCart, total, itemCount, cartOpen, setCartOpen } = useCart();
 
   const [menu, setMenu]         = useState([]);
   const [kategori, setKategori] = useState([]);
   const [activeKat, setActiveKat] = useState('semua');
   const [loading, setLoading]   = useState(true);
-  const [cartOpen, setCartOpen] = useState(false);
   const [step, setStep]         = useState('cart');   // 'cart' | 'tipe' | 'bayar' | 'sukses'
   const [tipeLayanan, setTipeLayanan] = useState('dine_in');
   const [metodeBayar, setMetodeBayar] = useState('cash');
@@ -78,53 +77,36 @@ export default function MenuPage({ onShowAuth, onNavigate }) {
     }
   }
 
-  async function handleBayar() {
-    setProcessing(true);
-    setErr('');
-    try {
-      const res = await bayar({ id_order: orderResult.id_order, metode_pembayaran: metodeBayar });
-      const data = res.data;
-      setTransaksiResult(data);
-      if (metodeBayar === 'qris') {
-        await generateQrisReceipt();
-      }
-      setStep('sukses');
-      clearCart();
-    } catch (e) {
-      setErr(e.message);
-    } finally {
-      setProcessing(false);
-    }
+  
+async function handleBayar() {
+  setProcessing(true);
+  try {
+    const res = await bayar({ id_order: orderResult.id_order, metode_pembayaran: metodeBayar });
+    setTransaksiResult(res.data);
+    
+    setStep('sukses');
+    clearCart();
+  } catch (e) {
+    setErr(e.message);
+  } finally {
+    setProcessing(false);
   }
+}
 
   const WA_NUMBER = '6285716836399';
 
   function generateQrisReceipt() {
-    const line = '==============================';
-    let text = '*WARKOP SI BONTOT*\n';
-    text += 'Struk Pesanan\n';
-    text += line + '\n';
-    text += `Kode: ${orderResult.kode_order}\n`;
-    text += `Pelanggan: ${namaPemesan}\n`;
-    text += `Layanan: ${tipeLayanan === 'dine_in' ? 'Makan di Sini' : 'Bawa Pulang'}\n`;
-    text += line + '\n\n';
-    text += '*Menu:*\n';
-    items.forEach(i => {
-      const sub = i.harga * i.jumlah;
-      text += `- ${i.nama_menu} x${i.jumlah} = Rp ${Number(sub).toLocaleString('id-ID')}\n`;
-    });
-    text += '\n' + line + '\n';
-    text += `*TOTAL: Rp ${Number(total).toLocaleString('id-ID')}*\n`;
-    text += line + '\n\n';
-    text += 'Terima kasih ☕';
+    if (!orderResult) return;
 
-    const waUrl = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(text)}`;
+    // Mengambil URL struk digital dari endpoint API yang sudah dibuat temanmu
+    // Ganti 'localhost' dengan IP laptop jika ingin di-scan dari HP
+    const strukUrl = getStrukUrl(orderResult.id_order);
 
-    QRCode.toDataURL(waUrl, { width: 250, margin: 2 })
+    // Menyematkan URL tersebut langsung ke dalam barcode
+    QRCode.toDataURL(strukUrl, { width: 250, margin: 2 })
       .then(url => setQrisDataUrl(url))
       .catch(e => console.error('QR error:', e));
   }
-
   function resetCart() {
     setCartOpen(false);
     setStep('cart');
@@ -360,37 +342,31 @@ export default function MenuPage({ onShowAuth, onNavigate }) {
             {step === 'sukses' && transaksiResult && (
               <div className="sukses-view">
                 <div className="sukses-icon-animation-wrap">
-                  <img src={iconUrl(metodeBayar === 'cash' ? 'check_circle' : 'pending')} className="success-status-svg" alt="" />
+                  <img src={iconUrl('check_circle')} className="success-status-svg" alt="" />
                 </div>
-                <h2>{metodeBayar === 'cash' ? 'Pembayaran Sukses!' : 'Pesanan Berhasil Antre!'}</h2>
+                <h2>Pembayaran Berhasil!</h2>
+                
                 <div className="sukses-detail">
                   <div className="sd-row"><span>No. Transaksi Digital</span>#<strong>{transaksiResult.id_transaksi}</strong></div>
                   <div className="sd-row"><span>Metode Valid</span><strong className="uppercase">{transaksiResult.metode_pembayaran}</strong></div>
                   <div className="sd-row"><span>Total Nominal</span><strong className="text-blue">{formatRp(transaksiResult.total_harga)}</strong></div>
                 </div>
 
-                {metodeBayar === 'qris' && qrisDataUrl && (
-                  <div className="qris-success-container">
-                    <p className="qris-help-text">Scan untuk sinkronisasi struk fisik kasir</p>
-                    <div className="qris-image-container size-sm">
-                      <img src={qrisDataUrl} alt="QR" />
-                    </div>
-                    <div className="download-receipt-box">
-                      <a
-                        href={orderResult ? getStrukUrl(orderResult.id_order) : '#'}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn-download-pdf-invoice"
-                      >
-                        <img src={iconUrl('description')} className="icon-white invoice-svg" alt="" /> Cetak Nota PDF
-                      </a>
-                    </div>
-                  </div>
-                )}
+                {/* Tombol Cetak Struk Digital Pengganti QRIS */}
+                <div className="download-receipt-box" style={{ width: '100%', marginBottom: '20px' }}>
+                  <a
+                    href={orderResult ? getStrukUrl(orderResult.id_order) : '#'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="checkout-btn"
+                    style={{ background: 'var(--blue)', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', textDecoration: 'none' }}
+                  >
+                    <img src={iconUrl('description')} className="icon-white invoice-svg" alt="" /> Simpan Struk Digital (PDF)
+                  </a>
+                </div>
 
                 <p className="sukses-msg">
-                  {metodeBayar === 'cash' ? 'Terima kasih banyak bray! Pesanan kamu telah dikirim ke dapur monitor.' :
-                   'Scan QR di atas untuk notifikasi instan langsung menuju WhatsApp kasir.'}
+                  Terima kasih banyak! Pesanan kamu telah dikirim ke dapur monitor dan struk digital sudah resmi diterbitkan.
                 </p>
                 <button className="checkout-btn" onClick={resetCart}>Pesan Menu Lainnya</button>
               </div>

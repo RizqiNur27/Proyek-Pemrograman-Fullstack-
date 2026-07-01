@@ -342,10 +342,24 @@ export default function AdminPage({ onNavigate }) {
     });
   }
 
-  const totalMenu       = menu.length;
-  const totalOmset      = transaksi.reduce((sum, t) => sum + Number(t.total_harga), 0);
-  const jumlahPesanan   = orders.length;
-  const transaksiSukses = transaksi.length;
+  const isHariIni = (dateString) => {
+    if (!dateString) return false;
+    const dbDate = new Date(dateString);
+    const hariIni = new Date();
+    // Bandingkan hari, bulan, dan tahunnya (mengabaikan jam/menit/detik)
+    return dbDate.getDate() === hariIni.getDate() &&
+          dbDate.getMonth() === hariIni.getMonth() &&
+          dbDate.getFullYear() === hariIni.getFullYear();
+  };
+
+  const ordersHariIni      = orders.filter(o => isHariIni(o.tanggal));
+  const transaksiHariIni   = transaksi.filter(t => isHariIni(t.waktu_bayar));
+  const omsetKeseluruhan   = transaksi.reduce((sum, t) => sum + Number(t.total_harga), 0);
+  const pesananKeseluruhan = orders.length;
+  const totalMenu          = menu.length;
+  const totalOmset         = transaksiHariIni.reduce((sum, t) => sum + Number(t.total_harga), 0);
+  const jumlahPesanan      = ordersHariIni.length;
+  const transaksiSukses    = transaksiHariIni.length;
 
   const menuTerlaris = [
     { nama: 'Es Kopi Susu Warkop', terjual: 48, harga: 15000, icon: 'coffee' },
@@ -362,6 +376,9 @@ export default function AdminPage({ onNavigate }) {
     
     const statusPesanan = o.status === 'selesai' ? 'selesai' : 'pending';
     const matchStatus = filterStatusOrder === 'semua' ? true : statusPesanan === filterStatusOrder;
+
+    const ordersHariIni = orders.filter(o => isHariIni(o.tanggal));
+    const transaksiHariIni = transaksi.filter(t => isHariIni(t.waktu_bayar));
 
     return matchSearch && matchStatus;
   });
@@ -424,9 +441,11 @@ export default function AdminPage({ onNavigate }) {
             {loading ? <Spinner /> : (
               <>
                 <div className="stat-grid">
-                  <StatCard icon="payments" label="Total Omset Penjualan" value={formatRp(totalOmset)} color="#1d4ed8" />
-                  <StatCard icon="local_mall" label="Total Pesanan Masuk" value={`${jumlahPesanan} Pesanan`} color="#3b82f6" />
-                  <StatCard icon="check_circle" label="Transaksi Sukses" value={`${transaksiSukses} Dibayar`} color="#22c55e" />
+                  <StatCard icon="payments" label="Total Omset Penjualan Hari Ini" value={formatRp(totalOmset)} color="#1d4ed8" />
+                  <StatCard icon="local_mall" label="Total Pesanan Masuk Hari Ini" value={`${jumlahPesanan} Pesanan`} color="#3b82f6" />
+                  <StatCard icon="check_circle" label="Transaksi Sukses Hari Ini" value={`${transaksiSukses} Dibayar`} color="#22c55e" />
+                  <StatCard icon="savings" label="Total Omset (Keseluruhan)" value={formatRp(omsetKeseluruhan)} color="#3b82f6" />
+                  <StatCard icon="receipt_long" label="Total Pesanan (Keseluruhan)" value={`${pesananKeseluruhan} Pesanan`} color="#f59e0b" />
                   <StatCard icon="coffee" label="Varian Menu Aktif" value={`${totalMenu} Produk`} color="#f59e0b" />
                 </div>
 
