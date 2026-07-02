@@ -1,4 +1,4 @@
-const BASE = 'http://192.168.1.37:5000/api'; //syarat agar qris nye bisa ganti ip sesuai jaringan yang digunakan
+const BASE = 'http://172.16.14.127:5000/api'; //syarat agar qris nye bisa ganti ip sesuai jaringan yang digunakan
 const UPLOADS_URL = 'http://localhost:5000/uploads';
 
 function headers(withAuth = false) {
